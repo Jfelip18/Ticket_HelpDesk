@@ -1,3 +1,6 @@
 .vscode
-.env
+Ticket_helpdesk/.env
 env
+.idea
+*.pyc
+_pycache_
