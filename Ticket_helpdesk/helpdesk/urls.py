@@ -10,6 +10,7 @@ urlpatterns = [
     path('registro/', views.registro, name='registro'),
     path('registro/cuenta/', views.registro_cuenta, name='registro_cuenta'),
     path('salir/', views.LogoutView.as_view(), name='salir'),
+    path('sesion/ping/', views.ping_sesion, name='ping'),
     # Área del cliente (con sesión iniciada)
     path('', views.inicio, name='inicio'),
     path('solicitar/', views.solicitar, name='solicitar'),

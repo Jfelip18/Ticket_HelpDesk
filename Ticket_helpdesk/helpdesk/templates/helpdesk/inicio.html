@@ -5,18 +5,25 @@
 
 {% block contenido %}
 <section class="portada">
-  <h1>Hola {{ perfil.nombre }}</h1>
-  <p class="portada-bajada">
-    Seleccione el producto que necesita soporte y cuéntenos qué le está pasando.
-  </p>
-  <div class="portada-acciones">
-    <a class="boton boton-linea boton-grande" href="{% url 'helpdesk:seguimiento' %}">
-      Consultar mis tickets
-    </a>
-    <a class="boton boton-claro boton-grande" href="{% url 'helpdesk:solicitar' %}">
-      Registrar solicitud
-    </a>
+  <div class="portada-contenido">
+    <h1>Hola {{ perfil.nombre }}, bienvenido</h1>
+    <p class="portada-bajada">
+      Seleccione el producto que necesita soporte y cuéntenos qué le está pasando.
+    </p>
+    <div class="portada-acciones">
+      <a class="boton boton-linea boton-grande" href="{% url 'helpdesk:seguimiento' %}">
+        Consultar mis tickets
+      </a>
+      <a class="boton boton-claro boton-grande" href="{% url 'helpdesk:solicitar' %}">
+        Registrar solicitud
+      </a>
+    </div>
   </div>
+  <img
+    class="portada-imagen"
+    src="{% static 'helpdesk/img/img.png' %}"
+    alt="Programas de Ingeniería y Ciencias Contables y Administrativas"
+  >
 </section>
 
 <h2 class="titulo-opciones">¿Sobre qué producto necesita ayuda?</h2>

@@ -15,22 +15,26 @@
 </div>
 
 <form method="get" class="formulario filtros" data-cargando>
-  <div class="grupo">
-    <label for="filtro-q">Buscar</label>
-    <input type="text" id="filtro-q" name="q" class="campo" value="{{ filtros.q|default:'' }}"
-           placeholder="Nombre, teléfono o dirección">
+  <div class="filtros-campos">
+    <div class="grupo">
+      <label for="filtro-q">Buscar</label>
+      <input type="text" id="filtro-q" name="q" class="campo" value="{{ filtros.q|default:'' }}"
+             placeholder="Nombre, teléfono o dirección">
+    </div>
+    <div class="grupo">
+      <label for="filtro-tipo">Tipo</label>
+      <select id="filtro-tipo" name="tipo" class="campo">
+        <option value="">Todos</option>
+        {% for valor, etiqueta in tipos %}
+          <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+      </select>
+    </div>
   </div>
-  <div class="grupo">
-    <label for="filtro-tipo">Tipo</label>
-    <select id="filtro-tipo" name="tipo" class="campo">
-      <option value="">Todos</option>
-      {% for valor, etiqueta in tipos %}
-        <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ etiqueta }}</option>
-      {% endfor %}
-    </select>
+  <div class="filtros-acciones">
+    <button class="boton boton-primario" type="submit">Filtrar</button>
+    <a class="boton boton-linea" data-cargando href="{% url 'helpdesk:panel_usuarios' %}">Limpiar</a>
   </div>
-  <button class="boton boton-primario" type="submit">Filtrar</button>
-  <a class="boton boton-linea" data-cargando href="{% url 'helpdesk:panel_usuarios' %}">Limpiar</a>
 </form>
 
 <div class="tabla-envoltura">

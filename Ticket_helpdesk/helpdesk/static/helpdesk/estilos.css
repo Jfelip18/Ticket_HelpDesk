@@ -66,7 +66,8 @@ a:hover {
 }
 
 .contenedor {
-  width: min(1120px, 100% - 2rem);
+  width: 100%;
+  padding-inline: clamp(1.5rem, 4vw, 4rem);
   margin: 0 auto;
 }
 
@@ -81,7 +82,7 @@ a:hover {
   align-items: center;
   gap: 1.5rem;
   flex-wrap: wrap;
-  padding: .85rem 0;
+  padding-block: .85rem;
 }
 
 .marca {
@@ -214,7 +215,7 @@ a:hover {
 
 .principal {
   flex: 1 0 auto;
-  padding: 2rem 0 3rem;
+  padding-block: 2rem 3rem;
 }
 
 .pie {
@@ -226,7 +227,7 @@ a:hover {
   display: grid;
   grid-template-columns: 1.6fr 1fr 1.2fr;
   gap: 2rem;
-  padding: 2.5rem 0 2rem;
+  padding-block: 2.5rem 2rem;
 }
 
 .pie-marca .marca {
@@ -270,7 +271,7 @@ a:hover {
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  padding: 1rem 0;
+  padding-block: 1rem;
   color: #a8a8a6;
   font-size: .8rem;
 }
@@ -305,6 +306,22 @@ h3 {
   padding: 2.5rem 2rem;
   margin-bottom: 1.5rem;
   box-shadow: var(--sombra);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.portada-contenido {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.portada-imagen {
+  flex: 0 0 auto;
+  width: min(560px, 45%);
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(60, 60, 59, .22);
 }
 
 .portada h1 {
@@ -512,6 +529,11 @@ h3 {
 
 .rejilla-form-registro {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 1000px;
+}
+
+.rejilla-form-media {
+  max-width: 900px;
 }
 
 .rejilla-form-apilada {
@@ -1046,16 +1068,31 @@ h3 {
 }
 
 .filtros {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
   gap: .75rem;
-  align-items: end;
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   padding: 1rem;
   margin-bottom: 1.25rem;
   box-shadow: var(--sombra);
+}
+
+.filtros-campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: .75rem;
+  flex: 1 1 620px;
+  min-width: 0;
+}
+
+.filtros-acciones {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  flex: 0 0 auto;
 }
 
 .formulario-busqueda {
@@ -1106,6 +1143,7 @@ h3 {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
+  max-width: 1400px;
 }
 
 .opcion {
@@ -1187,6 +1225,16 @@ h3 {
 .modal-cabecera h3 {
   margin: 0;
   font-size: 1.15rem;
+}
+
+.modal-cuerpo {
+  display: grid;
+  gap: 1rem;
+}
+
+.modal-cuerpo p {
+  margin: 0;
+  line-height: 1.5;
 }
 
 .modal-cerrar {
@@ -1278,6 +1326,16 @@ body.cargando .pie {
     grid-template-columns: 1fr;
   }
 
+  .portada {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .portada-imagen {
+    width: 100%;
+    max-width: 480px;
+  }
+
   .panel-menu {
     position: static;
   }
@@ -1292,6 +1350,10 @@ body.cargando .pie {
 }
 
 @media (max-width: 720px) {
+  .filtros-acciones {
+    width: 100%;
+  }
+
   .acceso-paso {
     grid-template-columns: 1fr;
   }

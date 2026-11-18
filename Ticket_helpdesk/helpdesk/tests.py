@@ -1,5 +1,6 @@
 from io import BytesIO
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core import mail
 from django.test import TestCase
@@ -126,6 +127,15 @@ class RegistroClienteTests(TestCase):
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, 'Ana')
+
+    def test_la_portada_muestra_el_banner_en_la_derecha(self):
+        crear_cliente()
+        self.client.login(username='ana', password='ClaveSegura#2026')
+
+        html = self.client.get(reverse('helpdesk:inicio')).content.decode()
+
+        self.assertIn('portada-imagen', html)
+        self.assertIn('/img/img.', html)
 
     def test_el_telefono_se_guarda_solo_con_digitos_y_se_muestra_formateado(self):
         registrarse(self.client, telefono='324 344 1263')
@@ -306,6 +316,58 @@ class AccesoClienteTests(TestCase):
         respuesta = self.client.get(reverse('helpdesk:inicio'))
         self.assertEqual(respuesta.status_code, 302)
         self.assertIn(reverse('helpdesk:ingresar'), respuesta.url)
+
+
+class SesionTests(TestCase):
+    def setUp(self):
+        crear_cliente()
+        self.client.login(username='ana', password='ClaveSegura#2026')
+
+    def test_la_sesion_se_cierra_despues_de_cuatro_minutos(self):
+        self.assertEqual(settings.SESSION_COOKIE_AGE, 60 * 4)
+        self.assertTrue(settings.SESSION_SAVE_EVERY_REQUEST)
+
+    def test_el_ping_renueva_la_sesion(self):
+        respuesta = self.client.post(reverse('helpdesk:ping'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.json()['ok'])
+        self.assertTrue(respuesta.json()['autenticado'])
+        self.assertEqual(respuesta.json()['expira_en'], 240)
+        self.assertIn('ultima_actividad', self.client.session)
+        self.assertEqual(int(respuesta.cookies['sessionid']['max-age']), 240)
+
+    def test_el_ping_solo_acepta_post(self):
+        respuesta = self.client.get(reverse('helpdesk:ping'))
+
+        self.assertEqual(respuesta.status_code, 405)
+
+    def test_el_ping_establece_la_cookie_csrf(self):
+        respuesta = self.client.post(reverse('helpdesk:ping'))
+
+        self.assertIn('csrftoken', respuesta.cookies)
+
+    def test_el_ping_tambien_responde_sin_iniciar_sesion(self):
+        self.client.logout()
+
+        respuesta = self.client.post(reverse('helpdesk:ping'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(respuesta.json()['autenticado'])
+
+    def test_las_paginas_muestran_el_aviso_de_sesion_por_vencer(self):
+        html = self.client.get(reverse('helpdesk:inicio')).content.decode()
+
+        self.assertIn('/js/sesion.', html)
+        self.assertIn('modal-sesion', html)
+        self.assertIn('Renovar sesión', html)
+
+    def test_la_pagina_de_ingresar_avisa_cuando_la_sesion_se_cerro(self):
+        self.client.logout()
+
+        respuesta = self.client.get(reverse('helpdesk:ingresar'), {'sesion': 'cerrada'})
+
+        self.assertContains(respuesta, 'Su sesión se cerró por inactividad')
 
 
 class SolicitudClienteTests(TestCase):
@@ -604,6 +666,17 @@ class PanelAdministradorTests(TestCase):
 
         self.assertEqual(respuesta.status_code, 302)
         self.assertIn(reverse('helpdesk:ingresar'), respuesta.url)
+
+    def test_los_botones_de_filtro_quedan_juntos_en_el_panel(self):
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        for nombre in ('helpdesk:panel_en_proceso', 'helpdesk:panel_reportes', 'helpdesk:panel_usuarios'):
+            html = self.client.get(reverse(nombre)).content.decode()
+
+            self.assertIn('filtros-campos', html)
+            self.assertIn('filtros-acciones', html)
+            self.assertIn('>Filtrar<', html)
+            self.assertIn('>Limpiar<', html)
 
     def test_el_login_del_panel_redirige_al_ingreso_comun(self):
         respuesta = self.client.get(reverse('helpdesk:panel_login'))

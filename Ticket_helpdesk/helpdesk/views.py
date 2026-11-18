@@ -1,16 +1,18 @@
 import csv
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView, LogoutView
 from django.db import IntegrityError
 from django.db.models import Count, Q
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 from .config import LONGITUD_DESCRIPCION
@@ -77,6 +79,21 @@ class AccesoView(LoginView):
         if es_administrador(self.request.user):
             return reverse('helpdesk:panel_dashboard')
         return reverse('helpdesk:inicio')
+
+
+@require_POST
+@ensure_csrf_cookie
+def ping_sesion(request):
+    """Renueva la ventana de la sesión (4 minutos) mientras el usuario está activo."""
+    if request.user.is_authenticated:
+        request.session['ultima_actividad'] = timezone.now().isoformat()
+    return JsonResponse(
+        {
+            'ok': True,
+            'autenticado': request.user.is_authenticated,
+            'expira_en': int(settings.SESSION_COOKIE_AGE),
+        }
+    )
 
 
 def admin_required(view_func):

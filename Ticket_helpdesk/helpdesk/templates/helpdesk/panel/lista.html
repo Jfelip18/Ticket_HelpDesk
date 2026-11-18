@@ -17,30 +17,34 @@
 </div>
 
 <form method="get" class="formulario filtros" data-cargando>
-  <div class="grupo">
-    <label for="filtro-q">Buscar</label>
-    <input type="text" id="filtro-q" name="q" class="campo" value="{{ filtros.q|default:'' }}"
-           placeholder="Radicado, nombre o teléfono">
+  <div class="filtros-campos">
+    <div class="grupo">
+      <label for="filtro-q">Buscar</label>
+      <input type="text" id="filtro-q" name="q" class="campo" value="{{ filtros.q|default:'' }}"
+             placeholder="Radicado, nombre o teléfono">
+    </div>
+    <div class="grupo">
+      <label for="filtro-producto">Producto</label>
+      <select id="filtro-producto" name="producto" class="campo">
+        <option value="">Todos</option>
+        {% for valor, etiqueta in productos %}
+          <option value="{{ valor }}" {% if filtros.producto == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="grupo">
+      <label for="filtro-desde">Desde</label>
+      <input type="date" id="filtro-desde" name="fecha_desde" class="campo" value="{{ filtros.fecha_desde|default:'' }}">
+    </div>
+    <div class="grupo">
+      <label for="filtro-hasta">Hasta</label>
+      <input type="date" id="filtro-hasta" name="fecha_hasta" class="campo" value="{{ filtros.fecha_hasta|default:'' }}">
+    </div>
   </div>
-  <div class="grupo">
-    <label for="filtro-producto">Producto</label>
-    <select id="filtro-producto" name="producto" class="campo">
-      <option value="">Todos</option>
-      {% for valor, etiqueta in productos %}
-        <option value="{{ valor }}" {% if filtros.producto == valor %}selected{% endif %}>{{ etiqueta }}</option>
-      {% endfor %}
-    </select>
+  <div class="filtros-acciones">
+    <button class="boton boton-primario" type="submit">Filtrar</button>
+    <a class="boton boton-linea" data-cargando href="{{ url_limpiar }}">Limpiar</a>
   </div>
-  <div class="grupo">
-    <label for="filtro-desde">Desde</label>
-    <input type="date" id="filtro-desde" name="fecha_desde" class="campo" value="{{ filtros.fecha_desde|default:'' }}">
-  </div>
-  <div class="grupo">
-    <label for="filtro-hasta">Hasta</label>
-    <input type="date" id="filtro-hasta" name="fecha_hasta" class="campo" value="{{ filtros.fecha_hasta|default:'' }}">
-  </div>
-  <button class="boton boton-primario" type="submit">Filtrar</button>
-  <a class="boton boton-linea" data-cargando href="{{ url_limpiar }}">Limpiar</a>
 </form>
 
 {% if tickets %}

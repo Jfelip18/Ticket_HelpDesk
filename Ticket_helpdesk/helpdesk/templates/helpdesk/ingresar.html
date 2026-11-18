@@ -14,6 +14,12 @@
   <h1 class="titulo-acceso">Ingresar</h1>
   <p class="subtitulo centrado-texto">Use el usuario y la contraseña con los que se registró.</p>
 
+  {% if request.GET.sesion == 'cerrada' %}
+    <div class="mensaje">
+      Su sesión se cerró por inactividad. Ingrese de nuevo.
+    </div>
+  {% endif %}
+
   <form method="post" class="formulario" novalidate data-cargando>
     {% csrf_token %}
     {% include 'helpdesk/_aviso_obligatorios.html' %}

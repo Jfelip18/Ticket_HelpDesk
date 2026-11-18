@@ -1,0 +1,28 @@
+{% comment %}
+Aviso de sesión por vencer: se muestra cuando el usuario lleva un rato sin
+actividad. El botón "Renovar sesión" refresca el token y reinicia el contador.
+{% endcomment %}
+<div class="modal" id="modal-sesion" hidden>
+  <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="titulo-sesion">
+    <header class="modal-cabecera">
+      <h3 id="titulo-sesion">Su sesión está por cerrarse</h3>
+    </header>
+
+    <div class="modal-cuerpo">
+      <p>
+        Por seguridad, su sesión se cierra después de 4 minutos sin actividad.
+        Se cerrará en <strong id="sesion-cuenta">60</strong> segundos.
+      </p>
+
+      <div class="acciones-form">
+        <button class="boton boton-primario" id="sesion-renovar" type="button">
+          Renovar sesión
+        </button>
+        <form method="post" action="{% url 'helpdesk:salir' %}">
+          {% csrf_token %}
+          <button class="boton boton-linea" type="submit">Cerrar sesión</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -89,6 +89,13 @@ LOGIN_URL = 'helpdesk:ingresar'
 LOGIN_REDIRECT_URL = 'helpdesk:inicio'
 LOGOUT_REDIRECT_URL = 'helpdesk:ingresar'
 
+# La sesión se cierra sola después de 4 minutos sin actividad.
+# SESSION_COOKIE_AGE va en segundos. SESSION_SAVE_EVERY_REQUEST renueva la
+# cookie en cada petición, por lo que la ventana de 4 minutos se desliza
+# mientras el usuario esté activo.
+SESSION_COOKIE_AGE = 60 * 4
+SESSION_SAVE_EVERY_REQUEST = True
+
 # Hasher rápido solo para las pruebas (PBKDF2 es muy lento en los tests).
 if 'test' in sys.argv:
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']

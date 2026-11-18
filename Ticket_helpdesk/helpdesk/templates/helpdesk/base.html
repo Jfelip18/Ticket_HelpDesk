@@ -9,12 +9,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'helpdesk/estilos.css' %}">
-  <script src="{% static 'helpdesk/js/mascara-telefono.js' %}" defer></script>
-  <script src="{% static 'helpdesk/js/cargando.js' %}" defer></script>
-  <script src="{% static 'helpdesk/js/menu-usuario.js' %}" defer></script>
+  <link rel="stylesheet" href="{% static 'helpdesk/estilos.css' %}?v=5">
+  <script src="{% static 'helpdesk/js/mascara-telefono.js' %}?v=5" defer></script>
+  <script src="{% static 'helpdesk/js/cargando.js' %}?v=5" defer></script>
+  <script src="{% static 'helpdesk/js/menu-usuario.js' %}?v=5" defer></script>
+  <script src="{% static 'helpdesk/js/sesion.js' %}?v=5" defer></script>
 </head>
-<body>
+<body
+  data-sesion-ping="{% url 'helpdesk:ping' %}"
+  data-sesion-salir="{% url 'helpdesk:salir' %}"
+  data-sesion-ingresar="{% url 'helpdesk:ingresar' %}"
+  data-sesion-limite="240"
+  data-sesion-aviso="60"
+  data-sesion-activa="{% if user.is_authenticated %}1{% else %}0{% endif %}">
   <header class="cabecera">
     <div class="contenedor cabecera-interior">
       <a class="marca" href="{% url 'helpdesk:inicio' %}">Help<span>Desk</span></a>
@@ -42,6 +49,10 @@
   <div class="cargando-overlay" aria-hidden="true">
     <div class="circulo-carga"></div>
   </div>
+
+  {% if user.is_authenticated %}
+    {% include 'helpdesk/_aviso_sesion.html' %}
+  {% endif %}
 
 <footer class="pie">
   <div class="contenedor pie-interior">
