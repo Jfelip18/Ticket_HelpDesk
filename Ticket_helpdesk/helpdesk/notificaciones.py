@@ -10,16 +10,49 @@ from .models import Ticket
 logger = logging.getLogger(__name__)
 
 
-def notificar_cambio_estado(ticket, estado_anterior):
+def _enlace_seguimiento(ticket):
+    ruta = reverse('helpdesk:seguimiento') + f'?radicado={ticket.radicado}'
+    base = (getattr(settings, 'SITE_URL', '') or '').rstrip('/')
+    return f'{base}{ruta}' if base else ruta
+
+
+def _enviar(ticket, asunto, lineas):
     correo = (ticket.usuario.correo or '').strip()
     if not correo:
         logger.info('Ticket %s sin correo: no se notifica.', ticket.radicado)
         return
 
-    ruta = reverse('helpdesk:seguimiento') + f'?radicado={ticket.radicado}'
-    base = (getattr(settings, 'SITE_URL', '') or '').rstrip('/')
-    enlace = f'{base}{ruta}' if base else ruta
+    try:
+        send_mail(
+            asunto,
+            '\n'.join(lineas),
+            settings.DEFAULT_FROM_EMAIL,
+            [correo],
+            using='default',
+        )
+    except Exception:
+        logger.exception(
+            'No se pudo enviar la notificación del ticket %s', ticket.radicado
+        )
 
+
+def notificar_ticket_creado(ticket):
+    estado = ticket.get_estado_display()
+    lineas = [
+        f'Hola {ticket.usuario.nombre},',
+        '',
+        f'Su solicitud {ticket.radicado} ({ticket.producto_texto}) fue registrada correctamente.',
+        f'Estado actual: {estado}',
+        f'Fecha: {timezone.localtime().strftime("%d/%m/%Y %H:%M")}',
+        '',
+        f'Puede consultar el detalle aquí: {_enlace_seguimiento(ticket)}',
+        '',
+        'Help Desk',
+    ]
+    _enviar(ticket, f'[{ticket.radicado}] Su solicitud fue registrada', lineas)
+
+
+def notificar_cambio_estado(ticket, estado_anterior):
     estado = ticket.get_estado_display()
     estado_previo = dict(Ticket.Estado.choices).get(estado_anterior, estado_anterior)
 
@@ -35,20 +68,13 @@ def notificar_cambio_estado(ticket, estado_anterior):
     lineas += [
         f'Fecha: {timezone.localtime().strftime("%d/%m/%Y %H:%M")}',
         '',
-        f'Consulte el detalle aquí: {enlace}',
+        f'Consulte el detalle aquí: {_enlace_seguimiento(ticket)}',
         '',
         'Help Desk',
     ]
 
-    try:
-        send_mail(
-            f'[{ticket.radicado}] Su solicitud ahora está {estado}',
-            '\n'.join(lineas),
-            settings.DEFAULT_FROM_EMAIL,
-            [correo],
-            using='default',
-        )
-    except Exception:
-        logger.exception(
-            'No se pudo enviar la notificación del ticket %s', ticket.radicado
-        )
+    _enviar(
+        ticket,
+        f'[{ticket.radicado}] Su solicitud ahora está {estado}',
+        lineas,
+    )

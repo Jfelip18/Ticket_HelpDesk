@@ -314,7 +314,6 @@ class SeguimientoForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        marcar_obligatorios(self)
 
     def clean_radicado(self):
         valor = self.cleaned_data['radicado'].strip().upper()

@@ -3,7 +3,7 @@ from django.db import connection, transaction
 from django.utils import timezone
 
 from .models import Ticket, Usuario
-from .notificaciones import notificar_cambio_estado
+from .notificaciones import notificar_cambio_estado, notificar_ticket_creado
 
 
 class TransicionInvalida(Exception):
@@ -101,6 +101,7 @@ def crear_ticket(usuario, producto, descripcion, producto_otro=''):
     ticket.radicado = f'HD-{timezone.localtime().year}-{ticket.pk:06d}'
     _registrar(ticket, Ticket.Estado.EN_PROCESO.label, 'Ticket creado por el cliente')
     ticket.save(update_fields=['radicado', 'historial'])
+    transaction.on_commit(lambda: notificar_ticket_creado(ticket))
     return ticket
 
 

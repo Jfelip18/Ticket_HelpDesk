@@ -9,7 +9,6 @@
 
   <form method="get" class="formulario formulario-busqueda" data-cargando>
     {% csrf_token %}
-    {% include 'helpdesk/_aviso_obligatorios.html' %}
     <div class="grupo">
       <label for="{{ form.radicado.id_for_label }}">{{ form.radicado.label }}</label>
       {{ form.radicado }}

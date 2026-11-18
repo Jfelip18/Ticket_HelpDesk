@@ -309,6 +309,12 @@ class SeguimientoClienteTests(TestCase):
         self.assertIn('Ticket creado por el cliente', html)
         self.assertIn('Ticket tomado por el administrador', html)
 
+    def test_el_formulario_de_consulta_no_muestra_el_aviso_de_obligatorios(self):
+        respuesta = self.client.get(reverse('helpdesk:seguimiento'))
+
+        self.assertNotContains(respuesta, 'Los campos marcados con')
+        self.assertNotContains(respuesta, 'Radicado del ticket *')
+
     def test_los_tickets_del_cliente_enlazan_a_su_linea_del_tiempo(self):
         html = self.client.get(reverse('helpdesk:seguimiento')).content.decode()
 
@@ -367,6 +373,15 @@ class ModeloYTransicionesTests(TestCase):
         self.assertEqual(ticket.estado, Ticket.Estado.ATENDIDO)
         self.assertIsNotNone(ticket.atendido_en)
         self.assertEqual(ticket.historial[-1]['estado'], Ticket.Estado.ATENDIDO.label)
+
+    def test_crear_ticket_envia_correo_de_confirmacion(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            ticket = crear_ticket_de_prueba(self.perfil)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['ana@example.com'])
+        self.assertIn(ticket.radicado, mail.outbox[0].subject)
+        self.assertIn(Ticket.Estado.EN_PROCESO.label, mail.outbox[0].body)
 
     def test_tomar_ticket_envia_correo_al_cliente(self):
         with self.captureOnCommitCallbacks(execute=True):
