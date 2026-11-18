@@ -17,9 +17,10 @@ from .config import LONGITUD_DESCRIPCION
 from .exportes import reporte_excel_bytes
 from .forms import (
     AccesoForm,
+    CuentaAccesoForm,
+    DatosClienteForm,
     EscalarForm,
     PerfilForm,
-    RegistroForm,
     SeguimientoForm,
     TicketForm,
     normalizar_telefono,
@@ -147,28 +148,50 @@ def _filtrar_tickets(queryset, params):
 
 
 def registro(request):
+    """Paso 1: el cliente ingresa sus datos personales."""
     if request.user.is_authenticated:
         return redirect('helpdesk:inicio')
-    form = RegistroForm(request.POST or None)
+    datos_previos = request.session.get('registro_datos')
+    form = DatosClienteForm(request.POST or None, initial=datos_previos)
     if request.method == 'POST' and form.is_valid():
-        datos = form.cleaned_data
+        request.session['registro_datos'] = form.cleaned_data
+        return redirect('helpdesk:registro_cuenta')
+    return render(request, 'helpdesk/registro.html', {'form': form})
+
+
+def registro_cuenta(request):
+    """Paso 2: el cliente define el usuario y la contraseña de su cuenta."""
+    if request.user.is_authenticated:
+        return redirect('helpdesk:inicio')
+    datos = request.session.get('registro_datos')
+    if not datos:
+        messages.info(request, 'Primero ingrese sus datos personales.')
+        return redirect('helpdesk:registro')
+    form = CuentaAccesoForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
         try:
             cuenta, perfil = registrar_cliente(
                 nombre=datos['nombre'],
                 apellido=datos['apellido'],
                 direccion=datos['direccion'],
                 telefono=datos['telefono'],
-                usuario=datos['usuario'],
-                contrasena=datos['contrasena'],
+                usuario=form.cleaned_data['usuario'],
+                contrasena=form.cleaned_data['contrasena'],
                 correo=datos['correo'],
             )
         except IntegrityError:
+            request.session.pop('registro_datos', None)
             messages.error(request, 'El usuario o el teléfono ya están registrados.')
             return redirect('helpdesk:registro')
+        request.session.pop('registro_datos', None)
         login(request, cuenta, backend='django.contrib.auth.backends.ModelBackend')
         messages.success(request, f'Bienvenido {perfil.nombre}, su cuenta fue creada.')
         return redirect('helpdesk:inicio')
-    return render(request, 'helpdesk/registro.html', {'form': form})
+    return render(
+        request,
+        'helpdesk/registro_cuenta.html',
+        {'form': form, 'datos': datos},
+    )
 
 
 def panel_login(request):

@@ -75,8 +75,8 @@ class AccesoForm(AuthenticationForm):
         marcar_obligatorios(self)
 
 
-class RegistroForm(forms.Form):
-    """Formulario de registro del cliente (crea la cuenta de acceso y su ficha)."""
+class DatosClienteForm(forms.Form):
+    """Paso 1 del registro: datos personales del cliente."""
 
     nombre = forms.CharField(
         max_length=80,
@@ -121,6 +121,33 @@ class RegistroForm(forms.Form):
             }
         ),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # La longitud de los campos sale de helpdesk/config.py.
+        aplicar_longitudes(self, LONGITUDES_REGISTRO)
+        marcar_obligatorios(self)
+
+    def clean_correo(self):
+        valor = self.cleaned_data['correo'].strip().lower()
+        if Usuario.objects.filter(correo__iexact=valor).exists():
+            raise ValidationError('Ese correo ya está registrado.')
+        return valor
+
+    def clean_telefono(self):
+        digitos = normalizar_telefono(self.cleaned_data['telefono'])
+        if not 7 <= len(digitos) <= 15:
+            raise ValidationError('Ingrese un número de teléfono válido (entre 7 y 15 dígitos).')
+        if Usuario.objects.filter(telefono=digitos).exists():
+            raise ValidationError(
+                'Ya existe una cuenta registrada con ese número de teléfono, ingrese con su usuario.'
+            )
+        return digitos
+
+
+class CuentaAccesoForm(forms.Form):
+    """Paso 2 del registro: credenciales con las que ingresará el cliente."""
+
     usuario = forms.CharField(
         max_length=150,
         label='Usuario',
@@ -140,10 +167,21 @@ class RegistroForm(forms.Form):
             attrs={'class': 'campo', 'autocomplete': 'new-password'}
         ),
     )
+    terminos = forms.BooleanField(
+        label='Acepto los términos y condiciones',
+        error_messages={'required': 'Debe aceptar los términos y condiciones.'},
+        widget=forms.CheckboxInput(),
+    )
+    datos_personales = forms.BooleanField(
+        label='Autorizo el tratamiento de mis datos personales',
+        error_messages={
+            'required': 'Debe autorizar el tratamiento de sus datos personales.'
+        },
+        widget=forms.CheckboxInput(),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # La longitud de los campos sale de helpdesk/config.py.
         aplicar_longitudes(self, LONGITUDES_REGISTRO)
         marcar_obligatorios(self)
 
@@ -152,22 +190,6 @@ class RegistroForm(forms.Form):
         if User.objects.filter(username__iexact=valor).exists():
             raise ValidationError('Ese nombre de usuario ya está en uso.')
         return valor
-
-    def clean_correo(self):
-        valor = self.cleaned_data['correo'].strip().lower()
-        if Usuario.objects.filter(correo__iexact=valor).exists():
-            raise ValidationError('Ese correo ya está registrado.')
-        return valor
-
-    def clean_telefono(self):
-        digitos = normalizar_telefono(self.cleaned_data['telefono'])
-        if not 7 <= len(digitos) <= 15:
-            raise ValidationError('Ingrese un número de teléfono válido (entre 7 y 15 dígitos).')
-        if Usuario.objects.filter(telefono=digitos).exists():
-            raise ValidationError(
-                'Ya existe una cuenta registrada con ese número de teléfono, ingrese con su usuario.'
-            )
-        return digitos
 
     def clean(self):
         cleaned_data = super().clean()
@@ -220,6 +242,7 @@ class PerfilForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         aplicar_longitudes(self, LONGITUDES_PERFIL)
+        self.fields['correo'].required = True
         marcar_obligatorios(self)
 
     def clean_telefono(self):

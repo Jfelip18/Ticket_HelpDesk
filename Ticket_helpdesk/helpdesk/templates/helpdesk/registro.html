@@ -6,7 +6,7 @@
 <div class="hoja">
   <div class="centro-texto">
     <h1>Registro de usuario</h1>
-    <p class="subtitulo">Cree su cuenta para poder registrar solicitudes y hacer seguimiento de sus tickets.</p>
+    <p class="subtitulo">Paso 1 de 2: ingrese sus datos personales.</p>
   </div>
 
   <form method="post" class="formulario" novalidate data-cargando>
@@ -20,7 +20,7 @@
 
     <fieldset>
       <legend>Datos del cliente</legend>
-      <div class="rejilla-form">
+      <div class="rejilla-form rejilla-form-registro">
         <div class="grupo">
           <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
           {{ form.nombre }}
@@ -32,11 +32,6 @@
           {% for error in form.apellido.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
         </div>
         <div class="grupo">
-          <label for="{{ form.direccion.id_for_label }}">{{ form.direccion.label }}</label>
-          {{ form.direccion }}
-          {% for error in form.direccion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-        </div>
-        <div class="grupo">
           <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
           {{ form.telefono }}
           {% for error in form.telefono.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
@@ -46,34 +41,21 @@
           {{ form.correo }}
           {% for error in form.correo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
         </div>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>Cuenta de acceso</legend>
-      <div class="rejilla-form">
-        <div class="grupo">
-          <label for="{{ form.usuario.id_for_label }}">{{ form.usuario.label }}</label>
-          {{ form.usuario }}
-          {% for error in form.usuario.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-        </div>
-        <div class="grupo">
-          <label for="{{ form.contrasena.id_for_label }}">{{ form.contrasena.label }}</label>
-          {{ form.contrasena }}
-          {% for error in form.contrasena.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-        </div>
-        <div class="grupo">
-          <label for="{{ form.repetir_contrasena.id_for_label }}">{{ form.repetir_contrasena.label }}</label>
-          {{ form.repetir_contrasena }}
-          {% for error in form.repetir_contrasena.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+        <div class="grupo grupo-ancho">
+          <label for="{{ form.direccion.id_for_label }}">{{ form.direccion.label }}</label>
+          {{ form.direccion }}
+          {% for error in form.direccion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
         </div>
       </div>
     </fieldset>
 
-    <div class="acciones-form">
-      <button class="boton boton-primario" type="submit">Crear mi cuenta</button>
-      <a class="boton boton-linea" href="{% url 'helpdesk:ingresar' %}">Ya tengo cuenta</a>
+    <div class="acciones-form acciones-centradas">
+      <button class="boton boton-primario" type="submit">Continuar</button>
     </div>
+    <p class="nota centrado-texto nota-registro">
+      ¿Ya se registró anteriormente?
+      <a href="{% url 'helpdesk:ingresar' %}">Ya tengo cuenta</a>
+    </p>
   </form>
 </div>
 {% endblock %}

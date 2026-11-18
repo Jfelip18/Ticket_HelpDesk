@@ -25,6 +25,8 @@ DATOS_REGISTRO = {
     'usuario': 'ana',
     'contrasena': 'ClaveSegura#2026',
     'repetir_contrasena': 'ClaveSegura#2026',
+    'terminos': 'on',
+    'datos_personales': 'on',
 }
 
 DATOS_SOLICITUD = {
@@ -51,15 +53,61 @@ def crear_ticket_de_prueba(perfil):
     return crear_ticket(usuario=perfil, **DATOS_SOLICITUD)
 
 
+CAMPOS_CLIENTE = ('nombre', 'apellido', 'direccion', 'telefono', 'correo')
+CAMPOS_CUENTA = (
+    'usuario',
+    'contrasena',
+    'repetir_contrasena',
+    'terminos',
+    'datos_personales',
+)
+
+
+def registrarse(cliente, **cambios):
+    """Completa los dos pasos del registro y devuelve la respuesta final."""
+    datos = {**DATOS_REGISTRO, **cambios}
+    cliente.post(
+        reverse('helpdesk:registro'),
+        {campo: datos[campo] for campo in CAMPOS_CLIENTE},
+    )
+    return cliente.post(
+        reverse('helpdesk:registro_cuenta'),
+        {campo: datos[campo] for campo in CAMPOS_CUENTA},
+    )
+
+
 class RegistroClienteTests(TestCase):
     def test_la_pagina_de_registro_se_abre(self):
         respuesta = self.client.get(reverse('helpdesk:registro'))
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, 'Registro de usuario')
+        self.assertContains(respuesta, 'Correo electrónico *')
+        self.assertNotContains(respuesta, 'Repetir contraseña')
+
+    def test_la_cuenta_se_pide_en_un_paso_posterior(self):
+        respuesta = self.client.post(
+            reverse('helpdesk:registro'),
+            {campo: DATOS_REGISTRO[campo] for campo in CAMPOS_CLIENTE},
+        )
+
+        self.assertRedirects(respuesta, reverse('helpdesk:registro_cuenta'))
+        respuesta = self.client.get(reverse('helpdesk:registro_cuenta'))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Cuenta de acceso')
+        self.assertContains(respuesta, 'Repetir contraseña *')
+        self.assertContains(respuesta, 'Acepto los términos y condiciones')
+        self.assertContains(respuesta, 'Autorizo el tratamiento de mis datos personales')
+        self.assertContains(respuesta, 'Retrato de estudiante')
+
+    def test_la_cuenta_no_se_puede_crear_sin_los_datos_previos(self):
+        respuesta = self.client.get(reverse('helpdesk:registro_cuenta'))
+
+        self.assertRedirects(respuesta, reverse('helpdesk:registro'))
+        self.assertFalse(Usuario.objects.exists())
 
     def test_el_registro_crea_la_cuenta_y_la_ficha_del_cliente(self):
-        respuesta = self.client.post(reverse('helpdesk:registro'), DATOS_REGISTRO)
+        respuesta = registrarse(self.client)
 
         self.assertEqual(respuesta.status_code, 302)
         self.assertRedirects(respuesta, reverse('helpdesk:inicio'))
@@ -72,7 +120,7 @@ class RegistroClienteTests(TestCase):
         self.assertFalse(perfil.cuenta.is_staff)
 
     def test_el_cliente_queda_iniciando_sesion_al_registrarse(self):
-        self.client.post(reverse('helpdesk:registro'), DATOS_REGISTRO)
+        registrarse(self.client)
 
         respuesta = self.client.get(reverse('helpdesk:inicio'))
 
@@ -80,10 +128,7 @@ class RegistroClienteTests(TestCase):
         self.assertContains(respuesta, 'Ana')
 
     def test_el_telefono_se_guarda_solo_con_digitos_y_se_muestra_formateado(self):
-        self.client.post(
-            reverse('helpdesk:registro'),
-            {**DATOS_REGISTRO, 'telefono': '324 344 1263'},
-        )
+        registrarse(self.client, telefono='324 344 1263')
 
         perfil = Usuario.objects.get()
         self.assertEqual(perfil.telefono, '3243441263')
@@ -92,7 +137,10 @@ class RegistroClienteTests(TestCase):
     def test_no_se_puede_registrar_un_telefono_ya_existente(self):
         crear_cliente()
 
-        respuesta = self.client.post(reverse('helpdesk:registro'), DATOS_REGISTRO)
+        respuesta = self.client.post(
+            reverse('helpdesk:registro'),
+            {campo: DATOS_REGISTRO[campo] for campo in CAMPOS_CLIENTE},
+        )
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertEqual(Usuario.objects.count(), 1)
@@ -101,8 +149,10 @@ class RegistroClienteTests(TestCase):
     def test_no_se_puede_registrar_un_usuario_ya_existente(self):
         crear_cliente()
 
-        respuesta = self.client.post(
-            reverse('helpdesk:registro'), {**DATOS_REGISTRO, 'telefono': '3011112222'}
+        respuesta = registrarse(
+            self.client,
+            telefono='3011112222',
+            correo='otra@example.com',
         )
 
         self.assertEqual(respuesta.status_code, 200)
@@ -110,13 +160,33 @@ class RegistroClienteTests(TestCase):
         self.assertContains(respuesta, 'Ese nombre de usuario ya está en uso.')
 
     def test_las_contrasenas_deben_coincidir(self):
-        respuesta = self.client.post(
-            reverse('helpdesk:registro'), {**DATOS_REGISTRO, 'repetir_contrasena': 'OtraClave#2026'}
-        )
+        respuesta = registrarse(self.client, repetir_contrasena='OtraClave#2026')
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertFalse(Usuario.objects.exists())
         self.assertContains(respuesta, 'Las contraseñas no coinciden.')
+
+    def test_debe_aceptar_los_terminos_y_autorizar_los_datos(self):
+        self.client.post(
+            reverse('helpdesk:registro'),
+            {campo: DATOS_REGISTRO[campo] for campo in CAMPOS_CLIENTE},
+        )
+
+        respuesta = self.client.post(
+            reverse('helpdesk:registro_cuenta'),
+            {
+                'usuario': DATOS_REGISTRO['usuario'],
+                'contrasena': DATOS_REGISTRO['contrasena'],
+                'repetir_contrasena': DATOS_REGISTRO['repetir_contrasena'],
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(Usuario.objects.exists())
+        self.assertContains(respuesta, 'Debe aceptar los términos y condiciones.')
+        self.assertContains(
+            respuesta, 'Debe autorizar el tratamiento de sus datos personales.'
+        )
 
 
 class CrearAdminCommandTests(TestCase):
@@ -180,9 +250,22 @@ class AccesoClienteTests(TestCase):
         html = self.client.get(reverse('helpdesk:inicio')).content.decode()
 
         self.assertNotIn('>Inicio<', html)
+        self.assertIn('menu-usuario-icono', html)
+        self.assertIn('Ver mis tickets', html)
         self.assertIn('Registrar solicitud', html)
-        self.assertIn('Mis tickets', html)
-        self.assertEqual(html.count('>Salir<'), 1)
+        self.assertIn('Cerrar sesión', html)
+        self.assertNotIn('>Salir<', html)
+
+        inicio_nav = html.index('<nav class="nav-principal">')
+        fin_nav = html.index('</nav>', inicio_nav)
+        self.assertNotIn('Mis tickets', html[inicio_nav:fin_nav])
+        self.assertNotIn('Registrar solicitud', html[inicio_nav:fin_nav])
+
+        inicio_menu = html.index('<details class="menu-usuario">')
+        fin_menu = html.index('</details>', inicio_menu)
+        menu = html[inicio_menu:fin_menu]
+        self.assertIn('Actualizar datos', menu)
+        self.assertNotIn('Registrar solicitud', menu)
 
     def test_el_menu_no_muestra_opciones_de_acceso_a_los_visitantes(self):
         respuesta = self.client.get(reverse('helpdesk:ingresar'))
@@ -270,6 +353,7 @@ class SolicitudClienteTests(TestCase):
                 'apellido': 'Ramírez',
                 'direccion': 'Carrera 11 # 22-33',
                 'telefono': '3001234567',
+                'correo': 'ana@example.com',
             },
         )
 
@@ -277,6 +361,21 @@ class SolicitudClienteTests(TestCase):
         self.perfil.refresh_from_db()
         self.assertEqual(self.perfil.nombre, 'Ana María')
         self.assertEqual(self.perfil.direccion, 'Carrera 11 # 22-33')
+
+    def test_el_correo_es_obligatorio_al_actualizar_los_datos(self):
+        respuesta = self.client.post(
+            reverse('helpdesk:inicio'),
+            {
+                'nombre': 'Ana',
+                'apellido': 'Ramírez',
+                'direccion': 'Carrera 11 # 22-33',
+                'telefono': '3001234567',
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Correo electrónico *')
+        self.assertContains(respuesta, 'Este campo es obligatorio.')
 
 
 class SeguimientoClienteTests(TestCase):
@@ -608,9 +707,12 @@ class PanelAdministradorTests(TestCase):
 
         html = self.client.get(reverse('helpdesk:panel_dashboard')).content.decode()
 
-        self.assertEqual(html.count('>Salir<'), 1)
-        self.assertNotIn('Mis tickets', html)
+        self.assertNotIn('>Salir<', html)
+        self.assertIn('Cerrar sesión', html)
+        self.assertIn('menu-usuario-icono', html)
+        self.assertNotIn('Ver mis tickets', html)
         self.assertNotIn('Registrar solicitud', html)
+        self.assertNotIn('Actualizar datos', html)
         self.assertNotIn('>Inicio<', html)
 
     def test_el_administrador_no_usa_el_area_de_cliente(self):

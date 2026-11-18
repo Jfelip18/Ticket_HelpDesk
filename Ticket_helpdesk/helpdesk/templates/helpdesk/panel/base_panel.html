@@ -2,16 +2,6 @@
 
 {% block titulo %}Panel del administrador · Help Desk{% endblock %}
 
-{% block cabecera_extra %}
-  <div class="usuario-panel">
-    <span>{{ request.user.get_username }}</span>
-    <form method="post" action="{% url 'helpdesk:salir' %}">
-      {% csrf_token %}
-      <button class="boton boton-claro" type="submit">Salir</button>
-    </form>
-  </div>
-{% endblock %}
-
 {% block contenido %}
 <div class="panel">
   <aside class="panel-menu">

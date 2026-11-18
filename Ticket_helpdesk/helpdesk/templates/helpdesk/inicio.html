@@ -13,9 +13,9 @@
     <a class="boton boton-linea boton-grande" href="{% url 'helpdesk:seguimiento' %}">
       Consultar mis tickets
     </a>
-    <button class="boton boton-claro boton-grande" type="button" data-modal="modal-datos">
-      Actualizar mis datos
-    </button>
+    <a class="boton boton-claro boton-grande" href="{% url 'helpdesk:solicitar' %}">
+      Registrar solicitud
+    </a>
   </div>
 </section>
 
@@ -126,11 +126,6 @@
           {% for error in form.apellido.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
         </div>
         <div class="grupo">
-          <label for="{{ form.direccion.id_for_label }}">{{ form.direccion.label }}</label>
-          {{ form.direccion }}
-          {% for error in form.direccion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-        </div>
-        <div class="grupo">
           <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
           {{ form.telefono }}
           {% for error in form.telefono.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
@@ -139,6 +134,11 @@
           <label for="{{ form.correo.id_for_label }}">{{ form.correo.label }}</label>
           {{ form.correo }}
           {% for error in form.correo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="grupo grupo-ancho">
+          <label for="{{ form.direccion.id_for_label }}">{{ form.direccion.label }}</label>
+          {{ form.direccion }}
+          {% for error in form.direccion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
         </div>
       </div>
       <div class="acciones-form">
@@ -165,6 +165,12 @@
     function cerrar(modal) {
       modal.hidden = true;
       document.body.classList.remove('sin-scroll');
+    }
+
+    var parametros = new URLSearchParams(window.location.search);
+    if (parametros.get('datos') === '1') {
+      abrir('modal-datos');
+      window.history.replaceState({}, '', window.location.pathname);
     }
 
     document.querySelectorAll('[data-modal]').forEach(function (elemento) {

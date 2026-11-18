@@ -8,6 +8,7 @@ urlpatterns = [
     # Acceso de los clientes
     path('ingresar/', views.AccesoView.as_view(), name='ingresar'),
     path('registro/', views.registro, name='registro'),
+    path('registro/cuenta/', views.registro_cuenta, name='registro_cuenta'),
     path('salir/', views.LogoutView.as_view(), name='salir'),
     # Área del cliente (con sesión iniciada)
     path('', views.inicio, name='inicio'),

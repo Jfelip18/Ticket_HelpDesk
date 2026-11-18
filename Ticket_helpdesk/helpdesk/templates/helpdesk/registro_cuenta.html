@@ -1,0 +1,75 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block titulo %}Cuenta de acceso · Help Desk{% endblock %}
+
+{% block contenido %}
+<div class="hoja">
+  <div class="centro-texto">
+    <h1>Cuenta de acceso</h1>
+    <p class="subtitulo">Paso 2 de 2: cree el usuario y la contraseña con los que ingresará.</p>
+  </div>
+
+  <form method="post" class="formulario" novalidate data-cargando>
+    {% csrf_token %}
+    {% include 'helpdesk/_aviso_obligatorios.html' %}
+    {% if form.non_field_errors %}
+      <div class="mensaje error">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <fieldset class="fieldset-acceso">
+      <legend>Datos de acceso</legend>
+      <div class="acceso-paso">
+        <div class="formulario-angosto">
+          <div class="rejilla-form rejilla-form-apilada">
+            <div class="grupo">
+              <label for="{{ form.usuario.id_for_label }}">{{ form.usuario.label }}</label>
+              {{ form.usuario }}
+              {% for error in form.usuario.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="grupo">
+              <label for="{{ form.contrasena.id_for_label }}">{{ form.contrasena.label }}</label>
+              {{ form.contrasena }}
+              {% for error in form.contrasena.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="grupo">
+              <label for="{{ form.repetir_contrasena.id_for_label }}">{{ form.repetir_contrasena.label }}</label>
+              {{ form.repetir_contrasena }}
+              {% for error in form.repetir_contrasena.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+          </div>
+
+          <div class="grupo-check">
+            <label for="{{ form.terminos.id_for_label }}">
+              {{ form.terminos }}
+              <span>{{ form.terminos.label }}</span>
+            </label>
+            {% for error in form.terminos.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="grupo-check">
+            <label for="{{ form.datos_personales.id_for_label }}">
+              {{ form.datos_personales }}
+              <span>{{ form.datos_personales.label }}</span>
+            </label>
+            {% for error in form.datos_personales.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+          </div>
+        </div>
+
+        <figure class="acceso-retrato">
+          <img
+            src="{% static 'helpdesk/img/Retrato de estudiante universitaria sonriendo.png' %}"
+            alt="Retrato de estudiante universitaria sonriendo"
+          >
+        </figure>
+      </div>
+    </fieldset>
+
+    <div class="acciones-form">
+      <button class="boton boton-primario" type="submit">Crear mi cuenta</button>
+      <a class="boton boton-linea" href="{% url 'helpdesk:registro' %}">Volver</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

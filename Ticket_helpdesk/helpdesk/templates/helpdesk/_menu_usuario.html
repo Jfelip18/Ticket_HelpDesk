@@ -1,0 +1,29 @@
+<div class="usuario-panel">
+  <details class="menu-usuario">
+    <summary class="menu-usuario-resumen" aria-label="Opciones de usuario">
+      <svg class="menu-usuario-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="4"></circle>
+        <path d="M4 21a8 8 0 0 1 16 0"></path>
+      </svg>
+      <span class="menu-usuario-nombre">{{ user.get_username }}</span>
+      <svg class="menu-usuario-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m6 9 6 6 6-6"></path>
+      </svg>
+    </summary>
+
+    <div class="menu-usuario-lista">
+      {% if user.perfil_helpdesk.tipo != 'ADMIN' %}
+        <a href="{% url 'helpdesk:seguimiento' %}">Ver mis tickets</a>
+        <a href="{% url 'helpdesk:inicio' %}?datos=1">Actualizar datos</a>
+      {% elif not es_panel %}
+        <a href="{% url 'helpdesk:panel_dashboard' %}">Panel de gestión</a>
+      {% endif %}
+      <form method="post" action="{% url 'helpdesk:salir' %}">
+        {% csrf_token %}
+        <button class="menu-usuario-salir" type="submit">Cerrar sesión</button>
+      </form>
+    </div>
+  </details>
+</div>
