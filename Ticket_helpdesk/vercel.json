@@ -1,19 +1,9 @@
 {
-  "version": 2,
-  "builds": [
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
     {
-      "src": "nombre_de_tu_proyecto/wsgi.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.12"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "nombre_de_tu_proyecto/wsgi.py"
+      "source": "/(.*)",
+      "destination": "/Ticket_helpdesk/wsgi.py"
     }
   ]
 }
