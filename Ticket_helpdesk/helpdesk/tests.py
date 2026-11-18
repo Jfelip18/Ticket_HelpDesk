@@ -376,14 +376,30 @@ class ModeloYTransicionesTests(TestCase):
     def test_escalar_ticket_guarda_la_dependencia(self):
         tomar_ticket(self.ticket.pk)
 
-        ticket = escalar_ticket(self.ticket.pk, 'Soporte técnico Bogotá')
+        ticket = escalar_ticket(self.ticket.pk, Ticket.Dependencia.SOPORTE_TECNICO)
 
         self.assertEqual(ticket.estado, Ticket.Estado.ESCALADO)
-        self.assertEqual(ticket.dependencia, 'Soporte técnico Bogotá')
+        self.assertEqual(ticket.dependencia, Ticket.Dependencia.SOPORTE_TECNICO)
+
+    def test_dependencia_texto_devuelve_la_etiqueta(self):
+        tomar_ticket(self.ticket.pk)
+
+        ticket = escalar_ticket(self.ticket.pk, Ticket.Dependencia.SISTEMAS)
+
+        self.assertEqual(ticket.dependencia_texto, 'Sistemas / TI')
+
+    def test_no_se_puede_escalar_a_una_dependencia_invalida(self):
+        tomar_ticket(self.ticket.pk)
+
+        with self.assertRaises(TransicionInvalida):
+            escalar_ticket(self.ticket.pk, 'cualquier texto')
+
+        self.ticket.refresh_from_db()
+        self.assertEqual(self.ticket.estado, Ticket.Estado.ATENDIDO)
 
     def test_escalado_se_finaliza_desde_la_dependencia(self):
         tomar_ticket(self.ticket.pk)
-        escalar_ticket(self.ticket.pk, 'Soporte técnico Bogotá')
+        escalar_ticket(self.ticket.pk, Ticket.Dependencia.SOPORTE_TECNICO)
 
         ticket = finalizar_ticket(self.ticket.pk)
 
@@ -472,19 +488,45 @@ class PanelAdministradorTests(TestCase):
 
         respuesta = self.client.post(
             reverse('helpdesk:panel_ticket_escalar', args=[self.ticket.pk]),
-            {'dependencia': 'Soporte técnico Bogotá'},
+            {'dependencia': Ticket.Dependencia.SOPORTE_TECNICO},
         )
 
         self.assertEqual(respuesta.status_code, 302)
         self.ticket.refresh_from_db()
         self.assertEqual(self.ticket.estado, Ticket.Estado.ESCALADO)
-        self.assertEqual(self.ticket.dependencia, 'Soporte técnico Bogotá')
+        self.assertEqual(self.ticket.dependencia, Ticket.Dependencia.SOPORTE_TECNICO)
 
         respuesta = self.client.post(reverse('helpdesk:panel_ticket_finalizar', args=[self.ticket.pk]))
 
         self.assertEqual(respuesta.status_code, 302)
         self.ticket.refresh_from_db()
         self.assertEqual(self.ticket.estado, Ticket.Estado.FINALIZADO)
+
+    def test_el_formulario_de_escalar_solo_ofrece_dependencias_validas(self):
+        tomar_ticket(self.ticket.pk)
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        respuesta = self.client.get(
+            reverse('helpdesk:panel_ticket_escalar', args=[self.ticket.pk])
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        for etiqueta in ('Sistemas / TI', 'Soporte técnico', 'Otra dependencia'):
+            self.assertContains(respuesta, etiqueta)
+
+    def test_no_escala_con_una_dependencia_invalida(self):
+        tomar_ticket(self.ticket.pk)
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        respuesta = self.client.post(
+            reverse('helpdesk:panel_ticket_escalar', args=[self.ticket.pk]),
+            {'dependencia': 'dependencia-invalida'},
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Seleccione una dependencia válida.')
+        self.ticket.refresh_from_db()
+        self.assertEqual(self.ticket.estado, Ticket.Estado.ATENDIDO)
 
     def test_el_panel_muestra_el_usuario_una_sola_vez_y_sin_links_de_cliente(self):
         self.client.login(username='soporte', password='clave-de-prueba-123')
@@ -518,7 +560,7 @@ class PanelAdministradorTests(TestCase):
 
     def test_seccion_otra_dependencia_solo_muestra_finalizar(self):
         tomar_ticket(self.ticket.pk)
-        escalar_ticket(self.ticket.pk, 'Soporte técnico Bogotá')
+        escalar_ticket(self.ticket.pk, Ticket.Dependencia.SOPORTE_TECNICO)
         self.client.login(username='soporte', password='clave-de-prueba-123')
 
         respuesta = self.client.get(reverse('helpdesk:panel_otra_dependencia'))

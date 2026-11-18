@@ -25,7 +25,7 @@ class TicketAdmin(admin.ModelAdmin):
         'dependencia',
         'creado_en',
     )
-    list_filter = ('estado', 'producto', 'creado_en')
+    list_filter = ('estado', 'producto', 'dependencia', 'creado_en')
     search_fields = (
         'radicado',
         'usuario__nombre',

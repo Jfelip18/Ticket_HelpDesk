@@ -17,6 +17,7 @@ from .config import LONGITUD_DESCRIPCION
 from .exportes import reporte_excel_bytes
 from .forms import (
     AccesoForm,
+    EscalarForm,
     PerfilForm,
     RegistroForm,
     SeguimientoForm,
@@ -344,26 +345,28 @@ def panel_ticket_finalizar(request, pk):
 @admin_required
 def panel_ticket_escalar(request, pk):
     ticket = get_object_or_404(Ticket.objects.select_related('usuario'), pk=pk)
+    if ticket.estado != Ticket.Estado.ATENDIDO:
+        messages.error(request, 'Este ticket no se puede escalar en su estado actual.')
+        return redirect('helpdesk:panel_atendidos')
+
+    form = EscalarForm(request.POST or None)
     if request.method == 'POST':
-        dependencia = (request.POST.get('dependencia') or '').strip()
-        if not dependencia:
-            messages.error(request, 'Escriba la dependencia a la que se escala el ticket.')
-        else:
+        if form.is_valid():
             try:
-                ticket = escalar_ticket(pk, dependencia)
+                ticket = escalar_ticket(pk, form.cleaned_data['dependencia'])
                 messages.success(
                     request,
-                    f'Ticket {ticket.radicado} escalado a {ticket.dependencia}.',
+                    f'Ticket {ticket.radicado} escalado a {ticket.dependencia_texto}.',
                 )
                 return redirect('helpdesk:panel_otra_dependencia')
             except TransicionInvalida as exc:
                 messages.error(request, str(exc))
                 return redirect('helpdesk:panel_atendidos')
-    if ticket.estado != Ticket.Estado.ATENDIDO:
-        messages.error(request, 'Este ticket no se puede escalar en su estado actual.')
-        return redirect('helpdesk:panel_atendidos')
+        messages.error(request, 'Seleccione una dependencia válida.')
+
     context = _contexto_panel(request)
     context['ticket'] = ticket
+    context['form'] = form
     return render(request, 'helpdesk/panel/escalar.html', context)
 
 
@@ -441,7 +444,7 @@ def panel_reportes_csv(request):
                 ticket.producto_texto,
                 ticket.descripcion,
                 ticket.get_estado_display(),
-                ticket.dependencia,
+                ticket.dependencia_texto,
                 timezone.localtime(ticket.atendido_en).strftime('%Y-%m-%d %H:%M')
                 if ticket.atendido_en
                 else '',

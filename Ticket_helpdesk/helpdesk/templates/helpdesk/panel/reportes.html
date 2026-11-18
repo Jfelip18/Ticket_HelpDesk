@@ -111,7 +111,7 @@
               <td>{{ ticket.usuario.nombre_completo }}</td>
               <td>{{ ticket.producto_texto }}</td>
               <td><span class="insignia {{ ticket.estado_clase }}">{{ ticket.get_estado_display }}</span></td>
-              <td>{{ ticket.dependencia|default:'—' }}</td>
+              <td>{{ ticket.dependencia_texto|default:'—' }}</td>
               <td>{{ ticket.creado_en|date:'d/m/Y H:i' }}</td>
               <td>{% if ticket.finalizado_en %}{{ ticket.finalizado_en|date:'d/m/Y H:i' }}{% else %}—{% endif %}</td>
             </tr>

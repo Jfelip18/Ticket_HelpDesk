@@ -65,7 +65,7 @@ def construir_reporte_excel(tickets):
             ticket.producto_texto,
             ticket.descripcion,
             ticket.get_estado_display(),
-            ticket.dependencia,
+            ticket.dependencia_texto,
             ticket.atendido_en,
             ticket.finalizado_en,
         ]

@@ -64,7 +64,7 @@
             <td>{{ ticket.usuario.nombre_completo }}</td>
             <td>{{ ticket.producto_texto }}</td>
             <td>{{ ticket.usuario.telefono_formateado }}</td>
-            <td>{{ ticket.dependencia|default:'—' }}</td>
+            <td>{{ ticket.dependencia_texto|default:'—' }}</td>
             <td>{{ ticket.creado_en|date:'d/m/Y H:i' }}</td>
             <td class="acciones-celda">
               {% include 'helpdesk/panel/_acciones.html' with destino=request.get_full_path %}

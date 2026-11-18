@@ -49,7 +49,7 @@
         <dd>{{ ticket.descripcion }}</dd>
         {% if ticket.dependencia %}
           <dt>Dependencia</dt>
-          <dd>{{ ticket.dependencia }}</dd>
+          <dd>{{ ticket.dependencia_texto }}</dd>
         {% endif %}
         <dt>Registrado</dt>
         <dd>{{ ticket.creado_en|date:'d/m/Y H:i' }}</dd>

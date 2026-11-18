@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Aire acondicionado">
-  <rect width="120" height="120" rx="20" fill="#eff4ff"/>
-  <g fill="none" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+  <rect width="120" height="120" rx="20" fill="#FDEBD7"/>
+  <g fill="none" stroke="#9A4F00" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
     <rect x="18" y="34" width="84" height="32" rx="7"/>
     <path d="M28 58h64" opacity=".5"/>
     <path d="M36 78c0 6 6 6 6 12M54 78c0 6 6 6 6 12M72 78c0 6 6 6 6 12M90 78c0 6 6 6 6 12" opacity=".55"/>

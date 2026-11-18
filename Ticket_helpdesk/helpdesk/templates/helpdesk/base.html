@@ -5,6 +5,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}Help Desk{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'helpdesk/img/LOGO UNINUNEZ.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'helpdesk/estilos.css' %}">
   <script src="{% static 'helpdesk/js/mascara-telefono.js' %}" defer></script>
   <script src="{% static 'helpdesk/js/cargando.js' %}" defer></script>
@@ -49,8 +53,39 @@
     <div class="circulo-carga"></div>
   </div>
 
-<footer class="pie text-center">
-  <div class="contenedor">Sistema de tickets UNINUÑEZ</div>
+<footer class="pie">
+  <div class="contenedor pie-interior">
+    <div class="pie-marca">
+      <a class="marca" href="{% url 'helpdesk:inicio' %}">Help<span>Desk</span></a>
+      <p class="pie-texto">Sistema de gestión de solicitudes de soporte de UNINÚÑEZ.</p>
+    </div>
+
+    <nav class="pie-columna" aria-label="Accesos rápidos">
+      <h3>Accesos</h3>
+      {% if user.is_authenticated and user.perfil_helpdesk.tipo == 'ADMIN' %}
+        <a href="{% url 'helpdesk:panel_dashboard' %}">Panel de gestión</a>
+      {% elif user.is_authenticated %}
+        <a href="{% url 'helpdesk:solicitar' %}">Registrar solicitud</a>
+        <a href="{% url 'helpdesk:seguimiento' %}">Mis tickets</a>
+      {% else %}
+        <a href="{% url 'helpdesk:ingresar' %}">Ingresar</a>
+        <a href="{% url 'helpdesk:registro' %}">Registrarme</a>
+      {% endif %}
+    </nav>
+
+    <div class="pie-columna">
+      <h3>Soporte</h3>
+      <p>Correo: soporte@uninunez.edu.co</p>
+      <p>Horario: Lunes a viernes, 8:00 a.m. – 5:00 p.m.</p>
+    </div>
+  </div>
+
+  <div class="pie-inferior">
+    <div class="contenedor pie-inferior-interior">
+      <span>© {% now "Y" %} UNINÚÑEZ · Todos los derechos reservados</span>
+      <span>Sistema de tickets Help Desk</span>
+    </div>
+  </div>
 </footer>
 </body>
 </html>

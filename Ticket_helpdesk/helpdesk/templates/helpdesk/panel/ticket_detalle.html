@@ -36,7 +36,7 @@
       <dt>Descripción</dt>
       <dd>{{ ticket.descripcion }}</dd>
       <dt>Dependencia</dt>
-      <dd>{{ ticket.dependencia|default:'—' }}</dd>
+      <dd>{{ ticket.dependencia_texto|default:'—' }}</dd>
       <dt>Atendido</dt>
       <dd>{% if ticket.atendido_en %}{{ ticket.atendido_en|date:'d/m/Y H:i' }}{% else %}—{% endif %}</dd>
       <dt>Finalizado</dt>

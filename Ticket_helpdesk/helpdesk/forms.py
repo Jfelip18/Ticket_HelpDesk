@@ -255,6 +255,20 @@ class TicketForm(forms.ModelForm):
         return cleaned_data
 
 
+class EscalarForm(forms.Form):
+    """Selección de la dependencia a la que se escala un ticket."""
+
+    dependencia = forms.ChoiceField(
+        choices=[('', 'Seleccione una dependencia…'), *Ticket.Dependencia.choices],
+        label='Dependencia a la que se escala',
+        widget=forms.Select(attrs={'class': 'campo'}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        marcar_obligatorios(self)
+
+
 class SeguimientoForm(forms.Form):
     radicado = forms.CharField(
         max_length=20,

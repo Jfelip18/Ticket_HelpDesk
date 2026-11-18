@@ -143,10 +143,11 @@ def escalar_ticket(ticket_id, dependencia):
             f'El ticket {ticket.radicado} no puede escalarse en su estado actual.'
         )
     dependencia = (dependencia or '').strip()
-    if not dependencia:
-        raise TransicionInvalida('Debe indicar la dependencia a la que se escala el ticket.')
+    if dependencia not in Ticket.Dependencia.values:
+        raise TransicionInvalida('Seleccione una dependencia válida.')
+    etiqueta = Ticket.Dependencia(dependencia).label
     ticket.estado = Ticket.Estado.ESCALADO
     ticket.dependencia = dependencia
-    _registrar(ticket, Ticket.Estado.ESCALADO.label, f'Escalado a {dependencia}')
+    _registrar(ticket, Ticket.Estado.ESCALADO.label, f'Escalado a {etiqueta}')
     ticket.save(update_fields=['estado', 'dependencia', 'historial', 'actualizado_en'])
     return ticket

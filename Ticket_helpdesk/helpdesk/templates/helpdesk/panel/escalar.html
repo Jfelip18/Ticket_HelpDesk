@@ -14,9 +14,9 @@
     {% csrf_token %}
     {% include 'helpdesk/_aviso_obligatorios.html' %}
     <div class="grupo">
-      <label for="dependencia">Dependencia a la que se escala *</label>
-      <input type="text" id="dependencia" name="dependencia" class="campo" required
-             placeholder="Ej: Soporte técnico Bogotá">
+      <label for="{{ form.dependencia.id_for_label }}">{{ form.dependencia.label }}</label>
+      {{ form.dependencia }}
+      {% for error in form.dependencia.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
     </div>
     <div class="acciones-form">
       <button class="boton boton-primario" type="submit">Escalar ticket</button>

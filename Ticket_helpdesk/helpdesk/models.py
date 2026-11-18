@@ -71,6 +71,16 @@ class Ticket(models.Model):
         AIRE_ACONDICIONADO = 'AIRE_ACONDICIONADO', 'Aire acondicionado'
         OTRO = 'OTRO', 'Otro'
 
+    class Dependencia(models.TextChoices):
+        SISTEMAS = 'SISTEMAS', 'Sistemas / TI'
+        SOPORTE_TECNICO = 'SOPORTE_TECNICO', 'Soporte técnico'
+        MANTENIMIENTO = 'MANTENIMIENTO', 'Mantenimiento'
+        RECURSOS_HUMANOS = 'RECURSOS_HUMANOS', 'Recursos humanos'
+        ADMINISTRACION = 'ADMINISTRACION', 'Administración'
+        ACADEMICA = 'ACADEMICA', 'Coordinación académica'
+        BIBLIOTECA = 'BIBLIOTECA', 'Biblioteca'
+        OTRA = 'OTRA', 'Otra dependencia'
+
     radicado = models.CharField(
         max_length=20,
         unique=True,
@@ -104,6 +114,7 @@ class Ticket(models.Model):
     dependencia = models.CharField(
         max_length=150,
         blank=True,
+        choices=Dependencia.choices,
         verbose_name='Dependencia de destino',
     )
     historial = models.JSONField(default=list, blank=True, verbose_name='Historial')
@@ -130,6 +141,10 @@ class Ticket(models.Model):
         if self.producto == self.Producto.OTRO:
             return self.producto_otro or 'Otro'
         return self.get_producto_display()
+
+    @property
+    def dependencia_texto(self):
+        return self.get_dependencia_display() if self.dependencia else ''
 
     @property
     def estado_clase(self):
