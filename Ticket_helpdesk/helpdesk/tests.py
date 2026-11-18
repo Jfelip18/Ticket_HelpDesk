@@ -1,6 +1,7 @@
 from io import BytesIO
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 from openpyxl import load_workbook
@@ -20,6 +21,7 @@ DATOS_REGISTRO = {
     'apellido': 'Ramírez',
     'direccion': 'Calle 10 # 20-30',
     'telefono': '3001234567',
+    'correo': 'ana@example.com',
     'usuario': 'ana',
     'contrasena': 'ClaveSegura#2026',
     'repetir_contrasena': 'ClaveSegura#2026',
@@ -41,6 +43,7 @@ def crear_cliente(**cambios):
         datos['telefono'],
         datos['usuario'],
         datos['contrasena'],
+        correo=datos['correo'],
     )
 
 
@@ -63,6 +66,8 @@ class RegistroClienteTests(TestCase):
         perfil = Usuario.objects.get()
         self.assertEqual(perfil.nombre_completo, 'Ana Ramírez')
         self.assertEqual(perfil.tipo, Usuario.Tipo.CLIENTE)
+        self.assertEqual(perfil.correo, 'ana@example.com')
+        self.assertEqual(perfil.cuenta.email, 'ana@example.com')
         self.assertTrue(perfil.cuenta.is_active)
         self.assertFalse(perfil.cuenta.is_staff)
 
@@ -362,6 +367,50 @@ class ModeloYTransicionesTests(TestCase):
         self.assertEqual(ticket.estado, Ticket.Estado.ATENDIDO)
         self.assertIsNotNone(ticket.atendido_en)
         self.assertEqual(ticket.historial[-1]['estado'], Ticket.Estado.ATENDIDO.label)
+
+    def test_tomar_ticket_envia_correo_al_cliente(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            tomar_ticket(self.ticket.pk)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['ana@example.com'])
+        self.assertIn(self.ticket.radicado, mail.outbox[0].subject)
+        self.assertIn(Ticket.Estado.ATENDIDO.label, mail.outbox[0].body)
+
+    def test_escalar_ticket_envia_correo_con_la_dependencia(self):
+        tomar_ticket(self.ticket.pk)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            escalar_ticket(self.ticket.pk, Ticket.Dependencia.SOPORTE_TECNICO)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(Ticket.Estado.ESCALADO.label, mail.outbox[0].subject)
+        self.assertIn('Soporte técnico', mail.outbox[0].body)
+
+    def test_finalizar_ticket_envia_correo_al_cliente(self):
+        tomar_ticket(self.ticket.pk)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            finalizar_ticket(self.ticket.pk)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(Ticket.Estado.FINALIZADO.label, mail.outbox[0].subject)
+
+    def test_no_se_envia_correo_si_el_cliente_no_tiene_correo(self):
+        self.perfil.correo = ''
+        self.perfil.save(update_fields=['correo'])
+
+        with self.captureOnCommitCallbacks(execute=True):
+            tomar_ticket(self.ticket.pk)
+
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_una_transicion_invalida_no_envia_correo(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            with self.assertRaises(TransicionInvalida):
+                finalizar_ticket(self.ticket.pk)
+
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_no_se_puede_tomar_un_ticket_ya_atendido(self):
         tomar_ticket(self.ticket.pk)

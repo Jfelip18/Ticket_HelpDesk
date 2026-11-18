@@ -3,6 +3,7 @@ from django.db import connection, transaction
 from django.utils import timezone
 
 from .models import Ticket, Usuario
+from .notificaciones import notificar_cambio_estado
 
 
 class TransicionInvalida(Exception):
@@ -61,13 +62,13 @@ def es_administrador(cuenta):
 
 
 @transaction.atomic
-def registrar_cliente(nombre, apellido, direccion, telefono, usuario, contrasena):
+def registrar_cliente(nombre, apellido, direccion, telefono, usuario, contrasena, correo=''):
     cuenta = User.objects.create_user(
         username=usuario,
         password=contrasena,
         first_name=(nombre or '').strip(),
         last_name=(apellido or '').strip(),
-        email='',
+        email=(correo or '').strip(),
         is_active=True,
         is_staff=False,
         is_superuser=False,
@@ -78,6 +79,7 @@ def registrar_cliente(nombre, apellido, direccion, telefono, usuario, contrasena
         apellido=(apellido or '').strip(),
         direccion=(direccion or '').strip(),
         telefono=(telefono or '').strip(),
+        correo=(correo or '').strip(),
         tipo=Usuario.Tipo.CLIENTE,
     )
     return cuenta, perfil
@@ -109,10 +111,14 @@ def tomar_ticket(ticket_id):
         raise TransicionInvalida(
             f'El ticket {ticket.radicado} no está en proceso, ya fue tomado por otro administrador.'
         )
+    estado_anterior = ticket.estado
     ticket.estado = Ticket.Estado.ATENDIDO
     ticket.atendido_en = timezone.now()
     _registrar(ticket, Ticket.Estado.ATENDIDO.label, 'Ticket tomado por el administrador')
     ticket.save(update_fields=['estado', 'atendido_en', 'historial', 'actualizado_en'])
+    transaction.on_commit(
+        lambda: notificar_cambio_estado(ticket, estado_anterior)
+    )
     return ticket
 
 
@@ -128,10 +134,14 @@ def finalizar_ticket(ticket_id):
         if ticket.estado == Ticket.Estado.ESCALADO
         else 'Finalizado por el administrador'
     )
+    estado_anterior = ticket.estado
     ticket.estado = Ticket.Estado.FINALIZADO
     ticket.finalizado_en = timezone.now()
     _registrar(ticket, Ticket.Estado.FINALIZADO.label, nota)
     ticket.save(update_fields=['estado', 'finalizado_en', 'historial', 'actualizado_en'])
+    transaction.on_commit(
+        lambda: notificar_cambio_estado(ticket, estado_anterior)
+    )
     return ticket
 
 
@@ -148,6 +158,10 @@ def escalar_ticket(ticket_id, dependencia):
     etiqueta = Ticket.Dependencia(dependencia).label
     ticket.estado = Ticket.Estado.ESCALADO
     ticket.dependencia = dependencia
+    estado_anterior = Ticket.Estado.ATENDIDO
     _registrar(ticket, Ticket.Estado.ESCALADO.label, f'Escalado a {etiqueta}')
     ticket.save(update_fields=['estado', 'dependencia', 'historial', 'actualizado_en'])
+    transaction.on_commit(
+        lambda: notificar_cambio_estado(ticket, estado_anterior)
+    )
     return ticket

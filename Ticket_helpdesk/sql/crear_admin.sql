@@ -31,7 +31,7 @@ VALUES (
 -- 2) Ficha del administrador en la tabla de usuarios de la aplicación.
 --    tipo = 'ADMIN' es lo que le da acceso al panel /panel/.
 INSERT INTO helpdesk_usuario (
-    cuenta_id, nombre, apellido, direccion, telefono, tipo, creado_en, actualizado_en
+    cuenta_id, nombre, apellido, direccion, telefono, correo, tipo, creado_en, actualizado_en
 )
 SELECT
     id,
@@ -39,6 +39,7 @@ SELECT
     'Help Desk',
     'Sede principal',
     '3000000000',
+    'admin@local',
     'ADMIN',
     NOW(),
     NOW()

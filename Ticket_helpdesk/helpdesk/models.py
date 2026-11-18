@@ -23,6 +23,11 @@ class Usuario(models.Model):
         unique=True,
         verbose_name='Número de teléfono',
     )
+    correo = models.EmailField(
+        blank=True,
+        default='',
+        verbose_name='Correo electrónico',
+    )
     tipo = models.CharField(
         max_length=10,
         choices=Tipo.choices,

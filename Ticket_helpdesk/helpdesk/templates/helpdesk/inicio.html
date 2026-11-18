@@ -135,6 +135,11 @@
           {{ form.telefono }}
           {% for error in form.telefono.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
         </div>
+        <div class="grupo">
+          <label for="{{ form.correo.id_for_label }}">{{ form.correo.label }}</label>
+          {{ form.correo }}
+          {% for error in form.correo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+        </div>
       </div>
       <div class="acciones-form">
         <button class="boton boton-primario" type="submit">Guardar cambios</button>

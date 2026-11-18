@@ -5,12 +5,12 @@ from .models import Ticket, Usuario
 
 @admin.register(Usuario)
 class UsuarioAdmin(admin.ModelAdmin):
-    list_display = ('nombre_completo', 'tipo', 'telefono_formateado', 'direccion', 'cuenta', 'creado_en')
+    list_display = ('nombre_completo', 'tipo', 'telefono_formateado', 'correo', 'direccion', 'cuenta', 'creado_en')
     list_filter = ('tipo', 'creado_en')
-    search_fields = ('nombre', 'apellido', 'telefono', 'direccion', 'cuenta__username')
+    search_fields = ('nombre', 'apellido', 'telefono', 'correo', 'direccion', 'cuenta__username')
     ordering = ('-creado_en',)
     fieldsets = (
-        (None, {'fields': ('cuenta', 'nombre', 'apellido', 'direccion', 'telefono', 'tipo')}),
+        (None, {'fields': ('cuenta', 'nombre', 'apellido', 'direccion', 'telefono', 'correo', 'tipo')}),
         ('Auditoría', {'fields': ('creado_en', 'actualizado_en')}),
     )
 

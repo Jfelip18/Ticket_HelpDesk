@@ -160,6 +160,7 @@ def registro(request):
                 telefono=datos['telefono'],
                 usuario=datos['usuario'],
                 contrasena=datos['contrasena'],
+                correo=datos['correo'],
             )
         except IntegrityError:
             messages.error(request, 'El usuario o el teléfono ya están registrados.')

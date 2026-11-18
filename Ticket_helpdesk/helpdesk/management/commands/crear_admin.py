@@ -17,9 +17,9 @@ VALUES (%s, false, false, true, %s, %s, %s, %s, %s);
 
 SQL_PERFIL = """
 INSERT INTO helpdesk_usuario (
-    cuenta_id, nombre, apellido, direccion, telefono, tipo, creado_en, actualizado_en
+    cuenta_id, nombre, apellido, direccion, telefono, correo, tipo, creado_en, actualizado_en
 )
-SELECT id, %s, %s, %s, %s, 'ADMIN', %s, %s
+SELECT id, %s, %s, %s, %s, %s, 'ADMIN', %s, %s
 FROM auth_user
 WHERE username = %s;
 """
@@ -85,6 +85,7 @@ class Command(BaseCommand):
             options['apellido'],
             options['direccion'],
             telefono,
+            options['email'],
             ahora,
             ahora,
             usuario,

@@ -110,6 +110,17 @@ class RegistroForm(forms.Form):
             }
         ),
     )
+    correo = forms.EmailField(
+        max_length=254,
+        label='Correo electrónico',
+        widget=forms.EmailInput(
+            attrs={
+                'placeholder': 'correo@ejemplo.com',
+                'class': 'campo',
+                'autocomplete': 'email',
+            }
+        ),
+    )
     usuario = forms.CharField(
         max_length=150,
         label='Usuario',
@@ -142,6 +153,12 @@ class RegistroForm(forms.Form):
             raise ValidationError('Ese nombre de usuario ya está en uso.')
         return valor
 
+    def clean_correo(self):
+        valor = self.cleaned_data['correo'].strip().lower()
+        if Usuario.objects.filter(correo__iexact=valor).exists():
+            raise ValidationError('Ese correo ya está registrado.')
+        return valor
+
     def clean_telefono(self):
         digitos = normalizar_telefono(self.cleaned_data['telefono'])
         if not 7 <= len(digitos) <= 15:
@@ -171,12 +188,13 @@ class PerfilForm(forms.ModelForm):
 
     class Meta:
         model = Usuario
-        fields = ['nombre', 'apellido', 'direccion', 'telefono']
+        fields = ['nombre', 'apellido', 'direccion', 'telefono', 'correo']
         labels = {
             'nombre': 'Nombre',
             'apellido': 'Apellido',
             'direccion': 'Dirección del cliente',
             'telefono': 'Número de teléfono',
+            'correo': 'Correo electrónico',
         }
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'campo'}),
@@ -188,6 +206,13 @@ class PerfilForm(forms.ModelForm):
                     'placeholder': '324 344 1263',
                     'inputmode': 'numeric',
                     'autocomplete': 'tel',
+                }
+            ),
+            'correo': forms.EmailInput(
+                attrs={
+                    'class': 'campo',
+                    'placeholder': 'correo@ejemplo.com',
+                    'autocomplete': 'email',
                 }
             ),
         }
@@ -207,6 +232,15 @@ class PerfilForm(forms.ModelForm):
         if otros.exists():
             raise ValidationError('Ese número de teléfono ya está registrado.')
         return digitos
+
+    def clean_correo(self):
+        valor = self.cleaned_data['correo'].strip().lower()
+        otros = Usuario.objects.filter(correo__iexact=valor)
+        if self.instance.pk:
+            otros = otros.exclude(pk=self.instance.pk)
+        if otros.exists():
+            raise ValidationError('Ese correo ya está registrado.')
+        return valor
 
 
 class TicketForm(forms.ModelForm):

@@ -146,6 +146,23 @@ STORAGES = {
 
 MAILERS = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+        'OPTIONS': {
+            'host': os.environ.get('EMAIL_HOST', 'localhost'),
+            'port': int(os.environ.get('EMAIL_PORT') or 587),
+            'username': os.environ.get('EMAIL_HOST_USER', ''),
+            'password': os.environ.get('EMAIL_HOST_PASSWORD', ''),
+            'use_tls': os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true',
+            'timeout': int(os.environ.get('EMAIL_TIMEOUT') or 10),
+        },
     },
 }
+
+# Sin credenciales (desarrollo), los correos se imprimen en la consola.
+if DEBUG and not os.environ.get('EMAIL_HOST_USER'):
+    MAILERS['default'] = {
+        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+    }
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@localhost')
+SITE_URL = os.environ.get('SITE_URL', '').rstrip('/')
