@@ -382,6 +382,10 @@ class ModeloYTransicionesTests(TestCase):
         self.assertEqual(mail.outbox[0].to, ['ana@example.com'])
         self.assertIn(ticket.radicado, mail.outbox[0].subject)
         self.assertIn(Ticket.Estado.EN_PROCESO.label, mail.outbox[0].body)
+        html = mail.outbox[0].alternatives[0].content
+        self.assertEqual(mail.outbox[0].alternatives[0].mimetype, 'text/html')
+        self.assertIn(ticket.radicado, html)
+        self.assertIn('Consultar seguimiento', html)
 
     def test_tomar_ticket_envia_correo_al_cliente(self):
         with self.captureOnCommitCallbacks(execute=True):
@@ -391,6 +395,11 @@ class ModeloYTransicionesTests(TestCase):
         self.assertEqual(mail.outbox[0].to, ['ana@example.com'])
         self.assertIn(self.ticket.radicado, mail.outbox[0].subject)
         self.assertIn(Ticket.Estado.ATENDIDO.label, mail.outbox[0].body)
+        html = mail.outbox[0].alternatives[0].content
+        self.assertEqual(mail.outbox[0].alternatives[0].mimetype, 'text/html')
+        self.assertIn(Ticket.Estado.ATENDIDO.label, html)
+        self.assertIn(self.ticket.radicado, html)
+        self.assertIn('Consultar seguimiento', html)
 
     def test_escalar_ticket_envia_correo_con_la_dependencia(self):
         tomar_ticket(self.ticket.pk)
@@ -401,6 +410,7 @@ class ModeloYTransicionesTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(Ticket.Estado.ESCALADO.label, mail.outbox[0].subject)
         self.assertIn('Soporte técnico', mail.outbox[0].body)
+        self.assertIn('Soporte técnico', mail.outbox[0].alternatives[0].content)
 
     def test_finalizar_ticket_envia_correo_al_cliente(self):
         tomar_ticket(self.ticket.pk)
@@ -410,6 +420,7 @@ class ModeloYTransicionesTests(TestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(Ticket.Estado.FINALIZADO.label, mail.outbox[0].subject)
+        self.assertIn(Ticket.Estado.FINALIZADO.label, mail.outbox[0].alternatives[0].content)
 
     def test_no_se_envia_correo_si_el_cliente_no_tiene_correo(self):
         self.perfil.correo = ''
