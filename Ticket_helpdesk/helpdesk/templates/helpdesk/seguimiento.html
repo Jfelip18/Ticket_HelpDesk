@@ -69,7 +69,6 @@
             <th>Producto</th>
             <th>Estado</th>
             <th>Registrado</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -83,10 +82,6 @@
               <td>{{ item.producto_texto }}</td>
               <td><span class="insignia {{ item.estado_clase }}">{{ item.get_estado_display }}</span></td>
               <td>{{ item.creado_en|date:'d/m/Y H:i' }}</td>
-              <td class="acciones-celda">
-                <a class="boton boton-linea" data-cargando
-                   href="{% url 'helpdesk:seguimiento' %}?radicado={{ item.radicado }}">Ver línea de tiempo</a>
-              </td>
             </tr>
           {% endfor %}
         </tbody>

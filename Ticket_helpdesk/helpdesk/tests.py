@@ -419,7 +419,7 @@ class SeguimientoClienteTests(TestCase):
 
         enlace = f'href="/seguimiento/?radicado={self.ticket.radicado}"'
         self.assertIn(enlace, html)
-        self.assertIn('Ver línea de tiempo', html)
+        self.assertNotIn('Ver línea de tiempo', html)
         self.assertIn('data-cargando', html)
 
     def test_el_cliente_no_ve_los_tickets_de_otro_cliente(self):

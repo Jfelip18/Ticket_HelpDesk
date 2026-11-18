@@ -46,7 +46,6 @@
             <th>Producto</th>
             <th>Estado</th>
             <th>Registrado</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -60,10 +59,6 @@
               <td>{{ ticket.producto_texto }}</td>
               <td><span class="insignia {{ ticket.estado_clase }}">{{ ticket.get_estado_display }}</span></td>
               <td>{{ ticket.creado_en|date:'d/m/Y H:i' }}</td>
-              <td class="acciones-celda">
-                <a class="boton boton-linea" data-cargando
-                   href="{% url 'helpdesk:seguimiento' %}?radicado={{ ticket.radicado }}">Ver línea de tiempo</a>
-              </td>
             </tr>
           {% endfor %}
         </tbody>
