@@ -1,0 +1,129 @@
+{% extends 'helpdesk/panel/base_panel.html' %}
+
+{% block titulo %}Reportes · Panel Help Desk{% endblock %}
+{% block titulo_panel %}Reportes{% endblock %}
+
+{% block panel_contenido %}
+<div class="cabecera-panel">
+  <div>
+    <h1>Reportes de tickets</h1>
+    <p class="subtitulo">Consulte los tickets registrados y exporte la información a Excel.</p>
+  </div>
+  <div class="acciones-descarga">
+    <a class="boton boton-primario" data-spin href="{% url 'helpdesk:panel_reportes_excel' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">
+      Descargar Excel
+    </a>
+    <a class="boton boton-linea" data-spin href="{% url 'helpdesk:panel_reportes_csv' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">
+      Descargar CSV
+    </a>
+  </div>
+</div>
+
+<form method="get" class="formulario filtros" data-cargando>
+  <div class="grupo">
+    <label for="filtro-q">Buscar</label>
+    <input type="text" id="filtro-q" name="q" class="campo" value="{{ filtros.q|default:'' }}"
+           placeholder="Radicado, nombre o teléfono">
+  </div>
+  <div class="grupo">
+    <label for="filtro-estado">Estado</label>
+    <select id="filtro-estado" name="estado" class="campo">
+      <option value="">Todos</option>
+      {% for valor, etiqueta in estados %}
+        <option value="{{ valor }}" {% if filtros.estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="grupo">
+    <label for="filtro-producto">Producto</label>
+    <select id="filtro-producto" name="producto" class="campo">
+      <option value="">Todos</option>
+      {% for valor, etiqueta in productos %}
+        <option value="{{ valor }}" {% if filtros.producto == valor %}selected{% endif %}>{{ etiqueta }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="grupo">
+    <label for="filtro-desde">Desde</label>
+    <input type="date" id="filtro-desde" name="fecha_desde" class="campo" value="{{ filtros.fecha_desde|default:'' }}">
+  </div>
+  <div class="grupo">
+    <label for="filtro-hasta">Hasta</label>
+    <input type="date" id="filtro-hasta" name="fecha_hasta" class="campo" value="{{ filtros.fecha_hasta|default:'' }}">
+  </div>
+  <button class="boton boton-primario" type="submit">Filtrar</button>
+  <a class="boton boton-linea" data-cargando href="{% url 'helpdesk:panel_reportes' %}">Limpiar</a>
+</form>
+
+<div class="rejilla-dos">
+  <div class="tarjeta">
+    <h2>Tickets por estado</h2>
+    <table class="tabla tabla-simple">
+      <tbody>
+        {% for fila in por_estado %}
+          <tr>
+            <td>{{ fila.estado }}</td>
+            <td class="derecha"><strong>{{ fila.total }}</strong></td>
+          </tr>
+        {% empty %}
+          <tr><td>Sin datos</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="tarjeta">
+    <h2>Tickets por producto</h2>
+    <table class="tabla tabla-simple">
+      <tbody>
+        {% for fila in por_producto %}
+          <tr>
+            <td>{{ fila.producto }}</td>
+            <td class="derecha"><strong>{{ fila.total }}</strong></td>
+          </tr>
+        {% empty %}
+          <tr><td>Sin datos</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h2>Detalle ({{ total_resultados }} tickets)</h2>
+  {% if tickets %}
+    <div class="tabla-envoltura">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Radicado</th>
+            <th>Usuario</th>
+            <th>Producto</th>
+            <th>Estado</th>
+            <th>Dependencia</th>
+            <th>Registrado</th>
+            <th>Finalizado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ticket in tickets %}
+            <tr>
+              <td><a data-cargando href="{% url 'helpdesk:panel_ticket_detalle' ticket.pk %}">{{ ticket.radicado }}</a></td>
+              <td>{{ ticket.usuario.nombre_completo }}</td>
+              <td>{{ ticket.producto_texto }}</td>
+              <td><span class="insignia {{ ticket.estado_clase }}">{{ ticket.get_estado_display }}</span></td>
+              <td>{{ ticket.dependencia|default:'—' }}</td>
+              <td>{{ ticket.creado_en|date:'d/m/Y H:i' }}</td>
+              <td>{% if ticket.finalizado_en %}{{ ticket.finalizado_en|date:'d/m/Y H:i' }}{% else %}—{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if total_resultados > 200 %}
+      <p class="nota">Se muestran los primeros 200 registros. Use los filtros o descargue el CSV para ver el total.</p>
+    {% endif %}
+  {% else %}
+    <p class="vacio">No hay tickets que coincidan con los filtros.</p>
+  {% endif %}
+</div>
+{% endblock %}

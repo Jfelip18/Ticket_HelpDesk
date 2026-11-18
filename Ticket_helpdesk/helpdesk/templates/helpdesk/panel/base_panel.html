@@ -1,0 +1,38 @@
+{% extends 'helpdesk/base.html' %}
+
+{% block titulo %}Panel del administrador · Help Desk{% endblock %}
+
+{% block cabecera_extra %}
+  <div class="usuario-panel">
+    <span>{{ request.user.get_username }}</span>
+    <form method="post" action="{% url 'helpdesk:salir' %}">
+      {% csrf_token %}
+      <button class="boton boton-claro" type="submit">Salir</button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block contenido %}
+<div class="panel">
+  <aside class="panel-menu">
+    <p class="menu-titulo">Panel de gestión</p>
+    <a class="menu-item {% if request.resolver_match.url_name == 'panel_dashboard' %}activo{% endif %}"
+       href="{% url 'helpdesk:panel_dashboard' %}">Resumen</a>
+    <a class="menu-item {% if request.resolver_match.url_name == 'panel_en_proceso' %}activo{% endif %}"
+       href="{% url 'helpdesk:panel_en_proceso' %}">En proceso <span class="contador">{{ conteo_proceso }}</span></a>
+    <a class="menu-item {% if request.resolver_match.url_name == 'panel_atendidos' %}activo{% endif %}"
+       href="{% url 'helpdesk:panel_atendidos' %}">Atendidos <span class="contador">{{ conteo_atendidos }}</span></a>
+    <a class="menu-item {% if request.resolver_match.url_name == 'panel_otra_dependencia' %}activo{% endif %}"
+       href="{% url 'helpdesk:panel_otra_dependencia' %}">Otra dependencia <span class="contador">{{ conteo_dependencia }}</span></a>
+    <a class="menu-item {% if request.resolver_match.url_name == 'panel_finalizados' %}activo{% endif %}"
+       href="{% url 'helpdesk:panel_finalizados' %}">Finalizados <span class="contador">{{ conteo_finalizados }}</span></a>
+    <a class="menu-item {% if request.resolver_match.url_name == 'panel_usuarios' %}activo{% endif %}"
+       href="{% url 'helpdesk:panel_usuarios' %}">Usuarios</a>
+    <a class="menu-item {% if request.resolver_match.url_name == 'panel_reportes' %}activo{% endif %}"
+       href="{% url 'helpdesk:panel_reportes' %}">Reportes</a>
+  </aside>
+  <section class="panel-cuerpo">
+    {% block panel_contenido %}{% endblock %}
+  </section>
+</div>
+{% endblock %}

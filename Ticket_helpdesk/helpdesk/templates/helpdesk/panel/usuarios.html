@@ -1,0 +1,72 @@
+{% extends 'helpdesk/panel/base_panel.html' %}
+
+{% block titulo %}Usuarios · Panel Help Desk{% endblock %}
+{% block titulo_panel %}Usuarios{% endblock %}
+
+{% block panel_contenido %}
+<div class="cabecera-panel">
+  <div>
+    <h1>Usuarios registrados</h1>
+    <p class="subtitulo">
+      Los clientes se crean solos al registrarse en la página web.
+      Los administradores se crean únicamente por script SQL.
+    </p>
+  </div>
+</div>
+
+<form method="get" class="formulario filtros" data-cargando>
+  <div class="grupo">
+    <label for="filtro-q">Buscar</label>
+    <input type="text" id="filtro-q" name="q" class="campo" value="{{ filtros.q|default:'' }}"
+           placeholder="Nombre, teléfono o dirección">
+  </div>
+  <div class="grupo">
+    <label for="filtro-tipo">Tipo</label>
+    <select id="filtro-tipo" name="tipo" class="campo">
+      <option value="">Todos</option>
+      {% for valor, etiqueta in tipos %}
+        <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ etiqueta }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button class="boton boton-primario" type="submit">Filtrar</button>
+  <a class="boton boton-linea" data-cargando href="{% url 'helpdesk:panel_usuarios' %}">Limpiar</a>
+</form>
+
+<div class="tabla-envoltura">
+  <table class="tabla">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Tipo</th>
+        <th>Teléfono</th>
+        <th>Dirección del cliente</th>
+        <th>Tickets</th>
+        <th>Registrado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for usuario in usuarios %}
+        <tr>
+          <td>{{ usuario.nombre_completo }}</td>
+          <td>
+            {% if usuario.tipo == 'ADMIN' %}
+              <span class="insignia insignia-escalado">{{ usuario.get_tipo_display }}</span>
+            {% else %}
+              <span class="insignia insignia-atendido">{{ usuario.get_tipo_display }}</span>
+            {% endif %}
+          </td>
+          <td>{{ usuario.telefono_formateado }}</td>
+          <td>{{ usuario.direccion }}</td>
+          <td>{{ usuario.total_tickets }}</td>
+          <td>{{ usuario.creado_en|date:'d/m/Y H:i' }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6" class="vacio">No hay usuarios registrados.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

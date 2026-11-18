@@ -1,0 +1,17 @@
+{% if ticket.puede_atender %}
+  <form method="post" action="{% url 'helpdesk:panel_ticket_atender' ticket.pk %}" class="inline" data-cargando>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ destino }}">
+    <button class="boton boton-primario" type="submit">Tomar ticket</button>
+  </form>
+{% endif %}
+{% if ticket.puede_escalar %}
+  <a class="boton boton-linea" data-cargando href="{% url 'helpdesk:panel_ticket_escalar' ticket.pk %}">Subir a otra dependencia</a>
+{% endif %}
+{% if ticket.puede_finalizar %}
+  <form method="post" action="{% url 'helpdesk:panel_ticket_finalizar' ticket.pk %}" class="inline" data-cargando>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ destino }}">
+    <button class="boton boton-exito" type="submit">Finalizar</button>
+  </form>
+{% endif %}

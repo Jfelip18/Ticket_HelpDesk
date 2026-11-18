@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
@@ -70,14 +71,27 @@ WSGI_APPLICATION = 'Ticket_helpdesk.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
-        ssl_require=True,
-    )
+DATABASE_URL = os.environ.get('DATABASE_URL') or f'sqlite:///{BASE_DIR / "db.sqlite3"}'
+
+_db_options = {
+    'conn_max_age': 600,
+    'conn_health_checks': True,
 }
+
+if DATABASE_URL.startswith('postgres'):
+    _db_options['ssl_require'] = True
+
+DATABASES = {
+    'default': dj_database_url.config(default=DATABASE_URL, **_db_options)
+}
+
+LOGIN_URL = 'helpdesk:ingresar'
+LOGIN_REDIRECT_URL = 'helpdesk:inicio'
+LOGOUT_REDIRECT_URL = 'helpdesk:ingresar'
+
+# Hasher rápido solo para las pruebas (PBKDF2 es muy lento en los tests).
+if 'test' in sys.argv:
+    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 
 
 # Password validation
@@ -102,9 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-co'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Bogota'
 
 USE_I18N = True
 

@@ -1,0 +1,80 @@
+{% extends 'helpdesk/panel/base_panel.html' %}
+
+{% block titulo %}{{ titulo }} · Panel Help Desk{% endblock %}
+{% block titulo_panel %}{{ titulo }}{% endblock %}
+
+{% block panel_contenido %}
+<div class="cabecera-panel">
+  <div>
+    <h1>{{ titulo }}</h1>
+    <p class="subtitulo">
+      {% if seccion == 'proceso' %}Tickets creados por los clientes que todavía no han sido tomados.
+      {% elif seccion == 'atendidos' %}Tickets en los que ya está trabajando un administrador.
+      {% elif seccion == 'dependencia' %}Tickets escalados a una dependencia superior, pendientes de finalizar.
+      {% else %}Tickets cerrados.{% endif %}
+    </p>
+  </div>
+</div>
+
+<form method="get" class="formulario filtros" data-cargando>
+  <div class="grupo">
+    <label for="filtro-q">Buscar</label>
+    <input type="text" id="filtro-q" name="q" class="campo" value="{{ filtros.q|default:'' }}"
+           placeholder="Radicado, nombre o teléfono">
+  </div>
+  <div class="grupo">
+    <label for="filtro-producto">Producto</label>
+    <select id="filtro-producto" name="producto" class="campo">
+      <option value="">Todos</option>
+      {% for valor, etiqueta in productos %}
+        <option value="{{ valor }}" {% if filtros.producto == valor %}selected{% endif %}>{{ etiqueta }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="grupo">
+    <label for="filtro-desde">Desde</label>
+    <input type="date" id="filtro-desde" name="fecha_desde" class="campo" value="{{ filtros.fecha_desde|default:'' }}">
+  </div>
+  <div class="grupo">
+    <label for="filtro-hasta">Hasta</label>
+    <input type="date" id="filtro-hasta" name="fecha_hasta" class="campo" value="{{ filtros.fecha_hasta|default:'' }}">
+  </div>
+  <button class="boton boton-primario" type="submit">Filtrar</button>
+  <a class="boton boton-linea" data-cargando href="{{ url_limpiar }}">Limpiar</a>
+</form>
+
+{% if tickets %}
+  <div class="tabla-envoltura">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Radicado</th>
+          <th>Usuario</th>
+          <th>Producto</th>
+          <th>Teléfono</th>
+          <th>Dependencia</th>
+          <th>Registrado</th>
+          <th class="acciones-celda">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in tickets %}
+          <tr>
+            <td><a data-cargando href="{% url 'helpdesk:panel_ticket_detalle' ticket.pk %}">{{ ticket.radicado }}</a></td>
+            <td>{{ ticket.usuario.nombre_completo }}</td>
+            <td>{{ ticket.producto_texto }}</td>
+            <td>{{ ticket.usuario.telefono_formateado }}</td>
+            <td>{{ ticket.dependencia|default:'—' }}</td>
+            <td>{{ ticket.creado_en|date:'d/m/Y H:i' }}</td>
+            <td class="acciones-celda">
+              {% include 'helpdesk/panel/_acciones.html' with destino=request.get_full_path %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="vacio">No hay tickets para mostrar con estos filtros.</p>
+{% endif %}
+{% endblock %}

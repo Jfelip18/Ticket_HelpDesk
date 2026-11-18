@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Videobeam">
+  <rect width="120" height="120" rx="20" fill="#eff4ff"/>
+  <g fill="none" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="20" y="44" width="50" height="32" rx="6"/>
+    <circle cx="59" cy="60" r="9"/>
+    <path d="M70 52l24-14v56L70 68"/>
+    <path d="M28 76v12h34V76"/>
+    <path d="M22 98h76" stroke-dasharray="6 8" opacity=".45"/>
+  </g>
+</svg>

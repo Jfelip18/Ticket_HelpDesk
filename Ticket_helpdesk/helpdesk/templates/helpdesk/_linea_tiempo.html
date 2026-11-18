@@ -1,0 +1,17 @@
+{% load helpdesk_extras %}
+<ol class="linea-tiempo">
+  {% for evento in ticket.historial %}
+    <li>
+      <span class="punto {{ evento.estado|clase_punto }}"></span>
+      <div class="evento">
+        <div class="evento-cabecera">
+          <span class="insignia {{ evento.estado|clase_insignia }}">{{ evento.estado }}</span>
+          <span class="evento-fecha">{{ evento.fecha_texto }}</span>
+        </div>
+        {% if evento.nota %}<p class="evento-nota">{{ evento.nota }}</p>{% endif %}
+      </div>
+    </li>
+  {% empty %}
+    <li class="evento-vacio">Este ticket todavía no tiene movimientos registrados.</li>
+  {% endfor %}
+</ol>

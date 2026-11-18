@@ -1,0 +1,31 @@
+{% extends 'helpdesk/base.html' %}
+
+{% block titulo %}Ticket {{ ticket.radicado }} · Help Desk{% endblock %}
+
+{% block contenido %}
+<div class="hoja centro-texto">
+  <div class="icono-exito">&#10003;</div>
+  <h1>Solicitud registrada</h1>
+  <p class="subtitulo">Guarde este radicado, es el número con el que podrá consultar el estado de su caso.</p>
+
+  <div class="radicado">
+    <span class="radicado-etiqueta">Radicado</span>
+    <strong>{{ ticket.radicado }}</strong>
+  </div>
+
+  <div class="resumen-ticket">
+    <div><span>Producto</span><strong>{{ ticket.producto_texto }}</strong></div>
+    <div><span>Estado</span><strong>{{ ticket.get_estado_display }}</strong></div>
+    <div><span>Cliente</span><strong>{{ ticket.usuario.nombre_completo }}</strong></div>
+    <div><span>Teléfono</span><strong>{{ ticket.usuario.telefono_formateado }}</strong></div>
+  </div>
+
+  <div class="acciones-form centrado">
+    <a class="boton boton-primario" data-cargando
+       href="{% url 'helpdesk:seguimiento' %}?radicado={{ ticket.radicado }}">
+      Consultar el seguimiento
+    </a>
+    <a class="boton boton-linea" data-cargando href="{% url 'helpdesk:solicitar' %}">Registrar otra solicitud</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Help Desk{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'helpdesk/estilos.css' %}">
+  <script src="{% static 'helpdesk/js/mascara-telefono.js' %}" defer></script>
+  <script src="{% static 'helpdesk/js/cargando.js' %}" defer></script>
+</head>
+<body>
+  <header class="cabecera">
+    <div class="contenedor cabecera-interior">
+      <a class="marca" href="{% url 'helpdesk:inicio' %}">Help<span>Desk</span></a>
+      <nav class="nav-principal">
+        {% if user.is_authenticated and user.perfil_helpdesk.tipo != 'ADMIN' %}
+          <a href="{% url 'helpdesk:solicitar' %}">Registrar solicitud</a>
+          <a href="{% url 'helpdesk:seguimiento' %}">Mis tickets</a>
+        {% endif %}
+      </nav>
+      {% block cabecera_extra %}{% endblock %}
+      {% if user.is_authenticated and not es_panel %}
+        <div class="usuario-panel">
+          <span>{{ user.get_username }}</span>
+          <form method="post" action="{% url 'helpdesk:salir' %}">
+            {% csrf_token %}
+            <button class="boton boton-claro" type="submit">Salir</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="contenedor principal">
+    {% block mensajes %}
+      {% if messages %}
+        <div class="mensajes">
+          {% for mensaje in messages %}
+            <div class="mensaje {{ mensaje.tags }}">{{ mensaje }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endblock %}
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <div class="cargando-overlay" aria-hidden="true">
+    <div class="circulo-carga"></div>
+  </div>
+
+  <footer class="pie">
+    <div class="contenedor"></div>
+  </footer>
+</body>
+</html>

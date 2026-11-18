@@ -1,0 +1,100 @@
+{% extends 'helpdesk/base.html' %}
+
+{% block titulo %}Seguimiento del ticket · Help Desk{% endblock %}
+
+{% block contenido %}
+<div class="hoja">
+  <h1>Consultar el estado de su caso</h1>
+  <p class="subtitulo">Ingrese el radicado que le entregamos al registrar la solicitud.</p>
+
+  <form method="get" class="formulario formulario-busqueda" data-cargando>
+    {% csrf_token %}
+    {% include 'helpdesk/_aviso_obligatorios.html' %}
+    <div class="grupo">
+      <label for="{{ form.radicado.id_for_label }}">{{ form.radicado.label }}</label>
+      {{ form.radicado }}
+      {% for error in form.radicado.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+    </div>
+    <button class="boton boton-primario" type="submit">Consultar</button>
+  </form>
+</div>
+
+{% if ticket %}
+<div class="hoja">
+  <div class="cabecera-ticket">
+    <div>
+      <h2 class="radicado-inline">{{ ticket.radicado }}</h2>
+      <p class="subtitulo">{{ ticket.producto_texto }}</p>
+    </div>
+    <span class="insignia {{ ticket.estado_clase }}">{{ ticket.get_estado_display }}</span>
+  </div>
+
+  <div class="rejilla-dos">
+    <div class="tarjeta">
+      <h3>Seguimiento del caso</h3>
+      {% include 'helpdesk/_linea_tiempo.html' %}
+    </div>
+    <div class="tarjeta">
+      <h3>Datos del caso</h3>
+      <dl class="datos">
+        <dt>Cliente</dt>
+        <dd>{{ ticket.usuario.nombre_completo }}</dd>
+        <dt>Dirección del cliente</dt>
+        <dd>{{ ticket.usuario.direccion }}</dd>
+        <dt>Teléfono</dt>
+        <dd>{{ ticket.usuario.telefono_formateado }}</dd>
+        <dt>Producto</dt>
+        <dd>{{ ticket.producto_texto }}</dd>
+        <dt>Descripción</dt>
+        <dd>{{ ticket.descripcion }}</dd>
+        {% if ticket.dependencia %}
+          <dt>Dependencia</dt>
+          <dd>{{ ticket.dependencia }}</dd>
+        {% endif %}
+        <dt>Registrado</dt>
+        <dd>{{ ticket.creado_en|date:'d/m/Y H:i' }}</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="tarjeta">
+  <h2>Mis tickets ({{ tickets|length }})</h2>
+  {% if tickets %}
+    <div class="tabla-envoltura">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Radicado</th>
+            <th>Producto</th>
+            <th>Estado</th>
+            <th>Registrado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in tickets %}
+            <tr>
+              <td>
+                <a href="{% url 'helpdesk:seguimiento' %}?radicado={{ item.radicado }}" data-cargando>
+                  {{ item.radicado }}
+                </a>
+              </td>
+              <td>{{ item.producto_texto }}</td>
+              <td><span class="insignia {{ item.estado_clase }}">{{ item.get_estado_display }}</span></td>
+              <td>{{ item.creado_en|date:'d/m/Y H:i' }}</td>
+              <td class="acciones-celda">
+                <a class="boton boton-linea" data-cargando
+                   href="{% url 'helpdesk:seguimiento' %}?radicado={{ item.radicado }}">Ver línea de tiempo</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="vacio">Todavía no tiene tickets registrados.</p>
+  {% endif %}
+</div>
+{% endblock %}

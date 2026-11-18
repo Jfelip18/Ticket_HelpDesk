@@ -1,0 +1,43 @@
+{% extends 'helpdesk/base.html' %}
+
+{% block titulo %}Ingresar · Help Desk{% endblock %}
+
+{% block contenido %}
+<div class="hoja hoja-ingreso">
+  <div class="icono-acceso" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  </div>
+
+  <h1 class="titulo-acceso">Ingresar</h1>
+  <p class="subtitulo centrado-texto">Use el usuario y la contraseña con los que se registró.</p>
+
+  <form method="post" class="formulario" novalidate data-cargando>
+    {% csrf_token %}
+    {% include 'helpdesk/_aviso_obligatorios.html' %}
+    {% if form.non_field_errors %}
+      <div class="mensaje error">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+    <div class="grupo">
+      <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+      {{ form.username }}
+      {% for error in form.username.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="grupo">
+      <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+      {{ form.password }}
+      {% for error in form.password.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+    </div>
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    <button class="boton boton-primario boton-ancho boton-acceso" type="submit">Ingresar</button>
+  </form>
+
+  <p class="nota centrado-texto">
+    ¿Todavía no tiene cuenta? <a href="{% url 'helpdesk:registro' %}">Regístrese aquí</a>
+  </p>
+</div>
+{% endblock %}

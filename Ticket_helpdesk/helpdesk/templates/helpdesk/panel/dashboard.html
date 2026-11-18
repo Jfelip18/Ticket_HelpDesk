@@ -1,0 +1,74 @@
+{% extends 'helpdesk/panel/base_panel.html' %}
+
+{% block titulo %}Resumen · Panel Help Desk{% endblock %}
+{% block titulo_panel %}Resumen{% endblock %}
+
+{% block panel_contenido %}
+<div class="cabecera-panel">
+  <div>
+    <h1>Resumen de tickets</h1>
+    <p class="subtitulo">Estado actual de los casos registrados en el Help Desk.</p>
+  </div>
+</div>
+
+<div class="rejilla-stats">
+  <div class="stat">
+    <span class="stat-etiqueta">Total de tickets</span>
+    <strong class="stat-valor">{{ total_tickets }}</strong>
+  </div>
+  <div class="stat stat-proceso">
+    <span class="stat-etiqueta">En proceso</span>
+    <strong class="stat-valor">{{ conteo_proceso }}</strong>
+    <a class="stat-enlace" href="{% url 'helpdesk:panel_en_proceso' %}">Ver sección</a>
+  </div>
+  <div class="stat stat-atendido">
+    <span class="stat-etiqueta">Atendidos</span>
+    <strong class="stat-valor">{{ conteo_atendidos }}</strong>
+    <a class="stat-enlace" href="{% url 'helpdesk:panel_atendidos' %}">Ver sección</a>
+  </div>
+  <div class="stat stat-escalado">
+    <span class="stat-etiqueta">Otra dependencia</span>
+    <strong class="stat-valor">{{ conteo_dependencia }}</strong>
+    <a class="stat-enlace" href="{% url 'helpdesk:panel_otra_dependencia' %}">Ver sección</a>
+  </div>
+  <div class="stat stat-finalizado">
+    <span class="stat-etiqueta">Finalizados</span>
+    <strong class="stat-valor">{{ conteo_finalizados }}</strong>
+    <a class="stat-enlace" href="{% url 'helpdesk:panel_finalizados' %}">Ver sección</a>
+  </div>
+</div>
+
+<h2>Tickets recientes</h2>
+{% if recientes %}
+  <div class="tabla-envoltura">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Radicado</th>
+          <th>Usuario</th>
+          <th>Producto</th>
+          <th>Estado</th>
+          <th>Registrado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in recientes %}
+          <tr>
+            <td><a data-cargando href="{% url 'helpdesk:panel_ticket_detalle' ticket.pk %}">{{ ticket.radicado }}</a></td>
+            <td>{{ ticket.usuario.nombre_completo }}</td>
+            <td>{{ ticket.producto_texto }}</td>
+            <td><span class="insignia {{ ticket.estado_clase }}">{{ ticket.get_estado_display }}</span></td>
+            <td>{{ ticket.creado_en|date:'d/m/Y H:i' }}</td>
+            <td class="acciones-celda">
+              {% include 'helpdesk/panel/_acciones.html' with destino=request.get_full_path %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="vacio">Todavía no hay tickets registrados.</p>
+{% endif %}
+{% endblock %}

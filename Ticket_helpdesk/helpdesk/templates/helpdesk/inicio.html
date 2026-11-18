@@ -1,0 +1,203 @@
+{% extends 'helpdesk/base.html' %}
+{% load static %}
+
+{% block titulo %}Mis solicitudes · Help Desk{% endblock %}
+
+{% block contenido %}
+<section class="portada">
+  <h1>Hola {{ perfil.nombre }}</h1>
+  <p class="portada-bajada">
+    Seleccione el producto que necesita soporte y cuéntenos qué le está pasando.
+  </p>
+  <div class="portada-acciones">
+    <a class="boton boton-linea boton-grande" href="{% url 'helpdesk:seguimiento' %}">
+      Consultar mis tickets
+    </a>
+    <button class="boton boton-claro boton-grande" type="button" data-modal="modal-datos">
+      Actualizar mis datos
+    </button>
+  </div>
+</section>
+
+<h2 class="titulo-opciones">¿Sobre qué producto necesita ayuda?</h2>
+<div class="rejilla-opciones">
+  {% for valor, etiqueta, imagen in opciones %}
+    <a class="opcion"
+       href="{% url 'helpdesk:solicitar' %}?producto={{ valor }}"
+       data-producto="{{ valor }}"
+       data-etiqueta="{{ etiqueta }}"
+       data-modal="modal-solicitud">
+      <span class="opcion-imagen">
+        <img src="{% static 'helpdesk/img/' %}{{ imagen }}" alt="{{ etiqueta }}">
+      </span>
+      <span class="opcion-texto">{{ etiqueta }}</span>
+    </a>
+  {% endfor %}
+</div>
+
+<div class="tarjeta">
+  <h2>Mis tickets ({{ total_tickets }})</h2>
+  {% if tickets %}
+    <div class="tabla-envoltura">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Radicado</th>
+            <th>Producto</th>
+            <th>Estado</th>
+            <th>Registrado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ticket in tickets %}
+            <tr>
+              <td>
+                <a href="{% url 'helpdesk:seguimiento' %}?radicado={{ ticket.radicado }}" data-cargando>
+                  {{ ticket.radicado }}
+                </a>
+              </td>
+              <td>{{ ticket.producto_texto }}</td>
+              <td><span class="insignia {{ ticket.estado_clase }}">{{ ticket.get_estado_display }}</span></td>
+              <td>{{ ticket.creado_en|date:'d/m/Y H:i' }}</td>
+              <td class="acciones-celda">
+                <a class="boton boton-linea" data-cargando
+                   href="{% url 'helpdesk:seguimiento' %}?radicado={{ ticket.radicado }}">Ver línea de tiempo</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="vacio">Todavía no ha registrado ninguna solicitud.</p>
+  {% endif %}
+</div>
+
+<!-- Modal: nueva solicitud -->
+<div class="modal" id="modal-solicitud" hidden>
+  <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="titulo-solicitud">
+    <header class="modal-cabecera">
+      <h3 id="titulo-solicitud">Nueva solicitud</h3>
+      <button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button>
+    </header>
+    <form method="post" action="{% url 'helpdesk:solicitar' %}" class="formulario" data-cargando>
+      {% csrf_token %}
+      {% include 'helpdesk/_aviso_obligatorios.html' %}
+      <input type="hidden" name="producto" id="modal-producto" value="">
+      <div class="grupo" id="modal-campo-otro" hidden>
+        <label for="modal-producto-otro">Nombre del producto *</label>
+        <input type="text" name="producto_otro" id="modal-producto-otro" class="campo"
+               placeholder="Escriba el producto que necesita soporte">
+      </div>
+      <div class="grupo">
+        <label for="modal-descripcion">Describa el problema *</label>
+        <textarea name="descripcion" id="modal-descripcion" class="campo" rows="5" required
+                  maxlength="{{ longitud_descripcion }}"
+                  placeholder="Cuéntenos qué está pasando con el producto"></textarea>
+      </div>
+      <div class="acciones-form">
+        <button class="boton boton-primario" type="submit">Registrar y generar radicado</button>
+        <button type="button" class="boton boton-linea" data-cerrar>Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: actualizar datos -->
+<div class="modal" id="modal-datos" hidden>
+  <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="titulo-datos">
+    <header class="modal-cabecera">
+      <h3 id="titulo-datos">Actualizar mis datos</h3>
+      <button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button>
+    </header>
+    <form method="post" action="{% url 'helpdesk:inicio' %}" class="formulario" data-cargando>
+      {% csrf_token %}
+      {% include 'helpdesk/_aviso_obligatorios.html' %}
+      <div class="rejilla-form">
+        <div class="grupo">
+          <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
+          {{ form.nombre }}
+          {% for error in form.nombre.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="grupo">
+          <label for="{{ form.apellido.id_for_label }}">{{ form.apellido.label }}</label>
+          {{ form.apellido }}
+          {% for error in form.apellido.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="grupo">
+          <label for="{{ form.direccion.id_for_label }}">{{ form.direccion.label }}</label>
+          {{ form.direccion }}
+          {% for error in form.direccion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="grupo">
+          <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
+          {{ form.telefono }}
+          {% for error in form.telefono.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+        </div>
+      </div>
+      <div class="acciones-form">
+        <button class="boton boton-primario" type="submit">Guardar cambios</button>
+        <button type="button" class="boton boton-linea" data-cerrar>Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var modales = {};
+
+    function abrir(id) {
+      var modal = document.getElementById(id);
+      if (!modal) { return; }
+      modal.hidden = false;
+      document.body.classList.add('sin-scroll');
+      var foco = modal.querySelector('input, textarea, select, button');
+      if (foco) { foco.focus(); }
+    }
+
+    function cerrar(modal) {
+      modal.hidden = true;
+      document.body.classList.remove('sin-scroll');
+    }
+
+    document.querySelectorAll('[data-modal]').forEach(function (elemento) {
+      modales[elemento.dataset.modal] = elemento;
+      elemento.addEventListener('click', function (evento) {
+        var idModal = elemento.dataset.modal;
+        if (idModal === 'modal-solicitud') {
+          evento.preventDefault();
+          var producto = elemento.dataset.producto || '';
+          var etiqueta = elemento.dataset.etiqueta || '';
+          document.getElementById('modal-producto').value = producto;
+          document.getElementById('titulo-solicitud').textContent = 'Soporte: ' + etiqueta;
+          var campoOtro = document.getElementById('modal-campo-otro');
+          var esOtro = producto === 'OTRO';
+          campoOtro.hidden = !esOtro;
+          document.getElementById('modal-producto-otro').required = esOtro;
+          document.getElementById('modal-descripcion').value = '';
+        }
+        abrir(idModal);
+      });
+    });
+
+    document.querySelectorAll('.modal').forEach(function (modal) {
+      modal.addEventListener('click', function (evento) {
+        if (evento.target === modal) { cerrar(modal); }
+      });
+      modal.querySelectorAll('[data-cerrar]').forEach(function (boton) {
+        boton.addEventListener('click', function () { cerrar(modal); });
+      });
+    });
+
+    document.addEventListener('keydown', function (evento) {
+      if (evento.key === 'Escape') {
+        document.querySelectorAll('.modal').forEach(function (modal) {
+          if (!modal.hidden) { cerrar(modal); }
+        });
+      }
+    });
+  })();
+</script>
+{% endblock %}

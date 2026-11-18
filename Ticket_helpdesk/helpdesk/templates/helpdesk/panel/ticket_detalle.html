@@ -1,0 +1,62 @@
+{% extends 'helpdesk/panel/base_panel.html' %}
+
+{% block titulo %}Ticket {{ ticket.radicado }} · Panel Help Desk{% endblock %}
+{% block titulo_panel %}Ticket {{ ticket.radicado }}{% endblock %}
+
+{% block panel_contenido %}
+<div class="cabecera-panel">
+  <div>
+    <h1>{{ ticket.radicado }}</h1>
+    <p class="subtitulo">Registrado el {{ ticket.creado_en|date:'d/m/Y H:i' }}</p>
+  </div>
+  <span class="insignia insignia-grande {{ ticket.estado_clase }}">{{ ticket.get_estado_display }}</span>
+</div>
+
+<div class="rejilla-dos">
+  <div class="tarjeta">
+    <h2>Datos del usuario</h2>
+    <dl class="datos">
+      <dt>Nombre</dt>
+      <dd>{{ ticket.usuario.nombre }}</dd>
+      <dt>Apellido</dt>
+      <dd>{{ ticket.usuario.apellido }}</dd>
+      <dt>Dirección del cliente</dt>
+      <dd>{{ ticket.usuario.direccion }}</dd>
+      <dt>Teléfono</dt>
+      <dd>{{ ticket.usuario.telefono_formateado }}</dd>
+      <dt>Registrado</dt>
+      <dd>{{ ticket.usuario.creado_en|date:'d/m/Y H:i' }}</dd>
+    </dl>
+  </div>
+  <div class="tarjeta">
+    <h2>Datos de la solicitud</h2>
+    <dl class="datos">
+      <dt>Producto</dt>
+      <dd>{{ ticket.producto_texto }}</dd>
+      <dt>Descripción</dt>
+      <dd>{{ ticket.descripcion }}</dd>
+      <dt>Dependencia</dt>
+      <dd>{{ ticket.dependencia|default:'—' }}</dd>
+      <dt>Atendido</dt>
+      <dd>{% if ticket.atendido_en %}{{ ticket.atendido_en|date:'d/m/Y H:i' }}{% else %}—{% endif %}</dd>
+      <dt>Finalizado</dt>
+      <dd>{% if ticket.finalizado_en %}{{ ticket.finalizado_en|date:'d/m/Y H:i' }}{% else %}—{% endif %}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h2>Acciones</h2>
+  <div class="acciones">
+    {% include 'helpdesk/panel/_acciones.html' with destino=request.get_full_path %}
+    {% if not ticket.puede_atender and not ticket.puede_escalar and not ticket.puede_finalizar %}
+      <span class="vacio-inline">Este ticket ya no tiene acciones disponibles.</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="tarjeta">
+  <h2>Historial</h2>
+  {% include 'helpdesk/_linea_tiempo.html' %}
+</div>
+{% endblock %}

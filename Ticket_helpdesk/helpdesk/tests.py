@@ -1,3 +1,571 @@
-from django.test import TestCase
+from io import BytesIO
 
-# Create your tests here.
+from django.contrib.auth.models import User
+from django.test import TestCase
+from django.urls import reverse
+from openpyxl import load_workbook
+
+from .models import Ticket, Usuario
+from .services import (
+    TransicionInvalida,
+    crear_ticket,
+    escalar_ticket,
+    finalizar_ticket,
+    registrar_cliente,
+    tomar_ticket,
+)
+
+DATOS_REGISTRO = {
+    'nombre': 'Ana',
+    'apellido': 'Ramírez',
+    'direccion': 'Calle 10 # 20-30',
+    'telefono': '3001234567',
+    'usuario': 'ana',
+    'contrasena': 'ClaveSegura#2026',
+    'repetir_contrasena': 'ClaveSegura#2026',
+}
+
+DATOS_SOLICITUD = {
+    'producto': Ticket.Producto.VIDEOBEAM,
+    'descripcion': 'No enciende y no muestra señal.',
+    'producto_otro': '',
+}
+
+
+def crear_cliente(**cambios):
+    datos = {**DATOS_REGISTRO, **cambios}
+    return registrar_cliente(
+        datos['nombre'],
+        datos['apellido'],
+        datos['direccion'],
+        datos['telefono'],
+        datos['usuario'],
+        datos['contrasena'],
+    )
+
+
+def crear_ticket_de_prueba(perfil):
+    return crear_ticket(usuario=perfil, **DATOS_SOLICITUD)
+
+
+class RegistroClienteTests(TestCase):
+    def test_la_pagina_de_registro_se_abre(self):
+        respuesta = self.client.get(reverse('helpdesk:registro'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Registro de usuario')
+
+    def test_el_registro_crea_la_cuenta_y_la_ficha_del_cliente(self):
+        respuesta = self.client.post(reverse('helpdesk:registro'), DATOS_REGISTRO)
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.assertRedirects(respuesta, reverse('helpdesk:inicio'))
+        perfil = Usuario.objects.get()
+        self.assertEqual(perfil.nombre_completo, 'Ana Ramírez')
+        self.assertEqual(perfil.tipo, Usuario.Tipo.CLIENTE)
+        self.assertTrue(perfil.cuenta.is_active)
+        self.assertFalse(perfil.cuenta.is_staff)
+
+    def test_el_cliente_queda_iniciando_sesion_al_registrarse(self):
+        self.client.post(reverse('helpdesk:registro'), DATOS_REGISTRO)
+
+        respuesta = self.client.get(reverse('helpdesk:inicio'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Ana')
+
+    def test_el_telefono_se_guarda_solo_con_digitos_y_se_muestra_formateado(self):
+        self.client.post(
+            reverse('helpdesk:registro'),
+            {**DATOS_REGISTRO, 'telefono': '324 344 1263'},
+        )
+
+        perfil = Usuario.objects.get()
+        self.assertEqual(perfil.telefono, '3243441263')
+        self.assertEqual(perfil.telefono_formateado, '324 344 1263')
+
+    def test_no_se_puede_registrar_un_telefono_ya_existente(self):
+        crear_cliente()
+
+        respuesta = self.client.post(reverse('helpdesk:registro'), DATOS_REGISTRO)
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(Usuario.objects.count(), 1)
+        self.assertContains(respuesta, 'Ya existe una cuenta registrada con ese número de teléfono')
+
+    def test_no_se_puede_registrar_un_usuario_ya_existente(self):
+        crear_cliente()
+
+        respuesta = self.client.post(
+            reverse('helpdesk:registro'), {**DATOS_REGISTRO, 'telefono': '3011112222'}
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(Usuario.objects.count(), 1)
+        self.assertContains(respuesta, 'Ese nombre de usuario ya está en uso.')
+
+    def test_las_contrasenas_deben_coincidir(self):
+        respuesta = self.client.post(
+            reverse('helpdesk:registro'), {**DATOS_REGISTRO, 'repetir_contrasena': 'OtraClave#2026'}
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(Usuario.objects.exists())
+        self.assertContains(respuesta, 'Las contraseñas no coinciden.')
+
+
+class CrearAdminCommandTests(TestCase):
+    def test_el_sql_generado_no_trae_saltos_de_linea_en_el_hash(self):
+        import re
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        salida = StringIO()
+        call_command('crear_admin', '--password', 'ClaveAdmin#2026', stdout=salida)
+
+        sql = salida.getvalue()
+        valores = re.findall(r"'([^'\n]*)'", sql)
+        self.assertTrue(valores, 'el comando debe imprimir el SQL')
+        hash_ = valores[0]
+        self.assertIn('$', hash_)
+        self.assertNotIn('\n', hash_)
+        self.assertNotIn('\r', hash_)
+        self.assertNotIn(' ', hash_)
+
+    def test_el_ingreso_muestra_el_error_real(self):
+        respuesta = self.client.post(
+            reverse('helpdesk:ingresar'), {'username': 'nadie', 'password': 'malaclave'}
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Usuario o contraseña incorrectos.')
+
+
+class AccesoClienteTests(TestCase):
+    def test_el_ingreso_muestra_el_aviso_de_carga(self):
+        respuesta = self.client.get(reverse('helpdesk:ingresar'))
+
+        contenido = respuesta.content.decode()
+        self.assertContains(respuesta, 'data-cargando')
+        self.assertIn('cargando-overlay', contenido)
+        self.assertIn('circulo-carga', contenido)
+
+    def test_el_registro_muestra_el_aviso_de_carga(self):
+        respuesta = self.client.get(reverse('helpdesk:registro'))
+
+        self.assertContains(respuesta, 'data-cargando')
+
+    def test_la_portada_pide_iniciar_sesion(self):
+        respuesta = self.client.get(reverse('helpdesk:inicio'))
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.assertIn(reverse('helpdesk:ingresar'), respuesta.url)
+
+    def test_solicitar_y_seguimiento_exigen_sesion(self):
+        for nombre in ('helpdesk:solicitar', 'helpdesk:seguimiento'):
+            respuesta = self.client.get(reverse(nombre))
+            self.assertEqual(respuesta.status_code, 302)
+            self.assertIn(reverse('helpdesk:ingresar'), respuesta.url)
+
+    def test_el_cliente_no_ve_el_boton_inicio_en_el_menu(self):
+        crear_cliente()
+        self.client.login(username='ana', password='ClaveSegura#2026')
+
+        html = self.client.get(reverse('helpdesk:inicio')).content.decode()
+
+        self.assertNotIn('>Inicio<', html)
+        self.assertIn('Registrar solicitud', html)
+        self.assertIn('Mis tickets', html)
+        self.assertEqual(html.count('>Salir<'), 1)
+
+    def test_el_menu_no_muestra_opciones_de_acceso_a_los_visitantes(self):
+        respuesta = self.client.get(reverse('helpdesk:ingresar'))
+
+        contenido = respuesta.content.decode()
+        inicio_nav = contenido.index('<nav class="nav-principal">')
+        fin_nav = contenido.index('</nav>', inicio_nav)
+
+        self.assertNotIn('href', contenido[inicio_nav:fin_nav])
+
+    def test_ingreso_correcto(self):
+        crear_cliente()
+
+        respuesta = self.client.post(
+            reverse('helpdesk:ingresar'),
+            {'username': 'ana', 'password': 'ClaveSegura#2026'},
+        )
+
+        self.assertRedirects(respuesta, reverse('helpdesk:inicio'))
+
+    def test_ingreso_incorrecto(self):
+        crear_cliente()
+
+        respuesta = self.client.post(
+            reverse('helpdesk:ingresar'),
+            {'username': 'ana', 'password': 'clave-mala'},
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Usuario o contraseña incorrectos.')
+
+    def test_salir_cierra_la_sesion(self):
+        crear_cliente()
+        self.client.login(username='ana', password='ClaveSegura#2026')
+
+        self.client.post(reverse('helpdesk:salir'))
+
+        respuesta = self.client.get(reverse('helpdesk:inicio'))
+        self.assertEqual(respuesta.status_code, 302)
+        self.assertIn(reverse('helpdesk:ingresar'), respuesta.url)
+
+
+class SolicitudClienteTests(TestCase):
+    def setUp(self):
+        self.cuenta, self.perfil = crear_cliente()
+        self.client.login(username='ana', password='ClaveSegura#2026')
+
+    def test_registra_la_solicitud_con_los_datos_ya_guardados(self):
+        respuesta = self.client.post(reverse('helpdesk:solicitar'), DATOS_SOLICITUD)
+
+        self.assertEqual(respuesta.status_code, 302)
+        ticket = Ticket.objects.get()
+        self.assertEqual(ticket.usuario, self.perfil)
+        self.assertEqual(ticket.usuario.telefono, '3001234567')
+        self.assertEqual(ticket.estado, Ticket.Estado.EN_PROCESO)
+
+    def test_no_vuelve_a_pedir_los_datos_del_cliente(self):
+        respuesta = self.client.get(reverse('helpdesk:solicitar'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertNotContains(respuesta, 'name="nombre"')
+        self.assertNotContains(respuesta, 'name="telefono"')
+        self.assertContains(respuesta, '300 123 4567')
+
+    def test_preselecciona_el_producto_que_venia_en_la_url(self):
+        respuesta = self.client.get(reverse('helpdesk:solicitar'), {'producto': 'TV'})
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, '<option value="TV" selected>', html=False)
+
+    def test_el_producto_otro_exige_el_nombre_del_producto(self):
+        respuesta = self.client.post(
+            reverse('helpdesk:solicitar'), {**DATOS_SOLICITUD, 'producto': 'OTRO'}
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(Ticket.objects.exists())
+        self.assertContains(respuesta, 'Escriba el producto que necesita soporte.')
+
+    def test_el_cliente_puede_actualizar_sus_datos(self):
+        respuesta = self.client.post(
+            reverse('helpdesk:inicio'),
+            {
+                'nombre': 'Ana María',
+                'apellido': 'Ramírez',
+                'direccion': 'Carrera 11 # 22-33',
+                'telefono': '3001234567',
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.perfil.refresh_from_db()
+        self.assertEqual(self.perfil.nombre, 'Ana María')
+        self.assertEqual(self.perfil.direccion, 'Carrera 11 # 22-33')
+
+
+class SeguimientoClienteTests(TestCase):
+    def setUp(self):
+        self.cuenta, self.perfil = crear_cliente()
+        self.ticket = crear_ticket_de_prueba(self.perfil)
+        self.client.login(username='ana', password='ClaveSegura#2026')
+
+    def test_el_cliente_ve_su_propio_ticket(self):
+        respuesta = self.client.get(
+            reverse('helpdesk:seguimiento'), {'radicado': self.ticket.radicado}
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, self.ticket.radicado)
+        self.assertContains(respuesta, Ticket.Estado.EN_PROCESO.label)
+
+    def test_el_seguimiento_muestra_la_linea_del_tiempo(self):
+        tomar_ticket(self.ticket.pk)
+
+        html = self.client.get(
+            reverse('helpdesk:seguimiento'), {'radicado': self.ticket.radicado}
+        ).content.decode()
+
+        self.assertIn('linea-tiempo', html)
+        self.assertIn('punto-proceso', html)
+        self.assertIn('punto-atendido', html)
+        self.assertIn('insignia-proceso', html)
+        self.assertIn('insignia-atendido', html)
+        self.assertIn('Ticket creado por el cliente', html)
+        self.assertIn('Ticket tomado por el administrador', html)
+
+    def test_los_tickets_del_cliente_enlazan_a_su_linea_del_tiempo(self):
+        html = self.client.get(reverse('helpdesk:seguimiento')).content.decode()
+
+        enlace = f'href="/seguimiento/?radicado={self.ticket.radicado}"'
+        self.assertIn(enlace, html)
+        self.assertIn('Ver línea de tiempo', html)
+        self.assertIn('data-cargando', html)
+
+    def test_el_cliente_no_ve_los_tickets_de_otro_cliente(self):
+        otro_cuenta, otro_perfil = crear_cliente(
+            nombre='Luis', telefono='3011112222', usuario='luis'
+        )
+        ticket_ajeno = crear_ticket_de_prueba(otro_perfil)
+
+        respuesta = self.client.get(
+            reverse('helpdesk:seguimiento'), {'radicado': ticket_ajeno.radicado}
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'No encontramos ningún ticket con ese radicado.')
+        self.assertNotContains(respuesta, 'Seguimiento del caso')
+        self.assertContains(respuesta, self.ticket.radicado)
+
+
+class ModeloYTransicionesTests(TestCase):
+    def setUp(self):
+        self.cuenta, self.perfil = crear_cliente()
+        self.ticket = crear_ticket_de_prueba(self.perfil)
+
+    def test_el_ticket_apunta_a_un_usuario(self):
+        self.assertIsInstance(self.ticket.usuario, Usuario)
+        self.assertEqual(self.ticket.usuario.nombre_completo, 'Ana Ramírez')
+        self.assertEqual(self.ticket.usuario.tickets.count(), 1)
+
+    def test_radicados_son_unicos(self):
+        otro_cuenta, otro_perfil = crear_cliente(
+            nombre='Luis', telefono='3011112222', usuario='luis'
+        )
+        segundo = crear_ticket_de_prueba(otro_perfil)
+
+        self.assertNotEqual(self.ticket.radicado, segundo.radicado)
+
+    def test_producto_otro_guarda_el_texto_ingresado(self):
+        ticket = crear_ticket(
+            usuario=self.perfil,
+            producto=Ticket.Producto.OTRO,
+            producto_otro='Proyector de sala 3',
+            descripcion='No prende.',
+        )
+
+        self.assertEqual(ticket.producto_texto, 'Proyector de sala 3')
+
+    def test_tomar_ticket_pasa_a_atendido(self):
+        ticket = tomar_ticket(self.ticket.pk)
+
+        self.assertEqual(ticket.estado, Ticket.Estado.ATENDIDO)
+        self.assertIsNotNone(ticket.atendido_en)
+        self.assertEqual(ticket.historial[-1]['estado'], Ticket.Estado.ATENDIDO.label)
+
+    def test_no_se_puede_tomar_un_ticket_ya_atendido(self):
+        tomar_ticket(self.ticket.pk)
+
+        with self.assertRaises(TransicionInvalida):
+            tomar_ticket(self.ticket.pk)
+
+    def test_no_se_puede_finalizar_un_ticket_en_proceso(self):
+        with self.assertRaises(TransicionInvalida):
+            finalizar_ticket(self.ticket.pk)
+
+    def test_escalar_ticket_guarda_la_dependencia(self):
+        tomar_ticket(self.ticket.pk)
+
+        ticket = escalar_ticket(self.ticket.pk, 'Soporte técnico Bogotá')
+
+        self.assertEqual(ticket.estado, Ticket.Estado.ESCALADO)
+        self.assertEqual(ticket.dependencia, 'Soporte técnico Bogotá')
+
+    def test_escalado_se_finaliza_desde_la_dependencia(self):
+        tomar_ticket(self.ticket.pk)
+        escalar_ticket(self.ticket.pk, 'Soporte técnico Bogotá')
+
+        ticket = finalizar_ticket(self.ticket.pk)
+
+        self.assertEqual(ticket.estado, Ticket.Estado.FINALIZADO)
+        self.assertIsNotNone(ticket.finalizado_en)
+
+
+class PanelAdministradorTests(TestCase):
+    def setUp(self):
+        # El administrador se define por su ROL (tipo ADMIN), no por is_staff.
+        self.usuario = User.objects.create_user(
+            username='soporte',
+            password='clave-de-prueba-123',
+        )
+        self.perfil_admin = Usuario.objects.create(
+            cuenta=self.usuario,
+            nombre='Soporte',
+            apellido='Help Desk',
+            direccion='Sede principal',
+            telefono='3009998888',
+            tipo=Usuario.Tipo.ADMIN,
+        )
+        self.cuenta, self.perfil = crear_cliente()
+        self.ticket = crear_ticket_de_prueba(self.perfil)
+
+    def test_el_panel_requiere_iniciar_sesion(self):
+        respuesta = self.client.get(reverse('helpdesk:panel_dashboard'))
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.assertIn(reverse('helpdesk:ingresar'), respuesta.url)
+
+    def test_el_login_del_panel_redirige_al_ingreso_comun(self):
+        respuesta = self.client.get(reverse('helpdesk:panel_login'))
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.assertIn(reverse('helpdesk:ingresar'), respuesta.url)
+
+    def test_usuario_sin_permisos_no_entra_al_panel(self):
+        self.client.login(username='ana', password='ClaveSegura#2026')
+
+        respuesta = self.client.get(reverse('helpdesk:panel_dashboard'))
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.assertEqual(respuesta.url, reverse('helpdesk:inicio'))
+
+    def test_el_rol_decide_el_acceso_y_no_los_permisos_de_django(self):
+        # Un usuario con is_staff=True pero rol CLIENTE tampoco entra.
+        usuario_staff = User.objects.create_user(
+            username='otro',
+            password='clave-de-prueba-123',
+            is_staff=True,
+        )
+        Usuario.objects.create(
+            cuenta=usuario_staff,
+            nombre='Otro',
+            apellido='Usuario',
+            direccion='Sede principal',
+            telefono='3018887777',
+            tipo=Usuario.Tipo.CLIENTE,
+        )
+        self.client.login(username='otro', password='clave-de-prueba-123')
+
+        respuesta = self.client.get(reverse('helpdesk:panel_dashboard'))
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.assertEqual(respuesta.url, reverse('helpdesk:inicio'))
+
+    def test_el_administrador_entra_al_panel_sin_is_staff(self):
+        self.assertFalse(self.usuario.is_staff)
+        self.assertFalse(self.usuario.is_superuser)
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        respuesta = self.client.get(reverse('helpdesk:panel_dashboard'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Resumen de tickets')
+
+    def test_administrador_toma_y_escala_un_ticket(self):
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        respuesta = self.client.post(reverse('helpdesk:panel_ticket_atender', args=[self.ticket.pk]))
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.ticket.refresh_from_db()
+        self.assertEqual(self.ticket.estado, Ticket.Estado.ATENDIDO)
+
+        respuesta = self.client.post(
+            reverse('helpdesk:panel_ticket_escalar', args=[self.ticket.pk]),
+            {'dependencia': 'Soporte técnico Bogotá'},
+        )
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.ticket.refresh_from_db()
+        self.assertEqual(self.ticket.estado, Ticket.Estado.ESCALADO)
+        self.assertEqual(self.ticket.dependencia, 'Soporte técnico Bogotá')
+
+        respuesta = self.client.post(reverse('helpdesk:panel_ticket_finalizar', args=[self.ticket.pk]))
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.ticket.refresh_from_db()
+        self.assertEqual(self.ticket.estado, Ticket.Estado.FINALIZADO)
+
+    def test_el_panel_muestra_el_usuario_una_sola_vez_y_sin_links_de_cliente(self):
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        html = self.client.get(reverse('helpdesk:panel_dashboard')).content.decode()
+
+        self.assertEqual(html.count('>Salir<'), 1)
+        self.assertNotIn('Mis tickets', html)
+        self.assertNotIn('Registrar solicitud', html)
+        self.assertNotIn('>Inicio<', html)
+
+    def test_el_administrador_no_usa_el_area_de_cliente(self):
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        for nombre in ('helpdesk:solicitar', 'helpdesk:seguimiento'):
+            respuesta = self.client.get(reverse(nombre))
+            self.assertRedirects(respuesta, reverse('helpdesk:panel_dashboard'))
+
+    def test_la_ficha_del_ticket_muestra_la_linea_del_tiempo(self):
+        tomar_ticket(self.ticket.pk)
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        html = self.client.get(
+            reverse('helpdesk:panel_ticket_detalle', args=[self.ticket.pk])
+        ).content.decode()
+
+        self.assertIn('linea-tiempo', html)
+        self.assertIn('punto-proceso', html)
+        self.assertIn('punto-atendido', html)
+        self.assertIn('Ticket tomado por el administrador', html)
+
+    def test_seccion_otra_dependencia_solo_muestra_finalizar(self):
+        tomar_ticket(self.ticket.pk)
+        escalar_ticket(self.ticket.pk, 'Soporte técnico Bogotá')
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        respuesta = self.client.get(reverse('helpdesk:panel_otra_dependencia'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Finalizar')
+        self.assertNotContains(respuesta, 'Tomar ticket')
+        self.assertNotContains(respuesta, 'Subir a otra dependencia')
+
+    def test_descarga_de_reporte_csv(self):
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        respuesta = self.client.get(reverse('helpdesk:panel_reportes_csv'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertIn('text/csv', respuesta['Content-Type'])
+        self.assertIn(self.ticket.radicado, respuesta.content.decode('utf-8-sig'))
+
+    def test_descarga_de_reporte_excel(self):
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        respuesta = self.client.get(reverse('helpdesk:panel_reportes_excel'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertIn('spreadsheetml.sheet', respuesta['Content-Type'])
+        self.assertIn('.xlsx', respuesta['Content-Disposition'])
+
+        libro = load_workbook(BytesIO(respuesta.content))
+        hoja = libro['Tickets']
+        self.assertEqual(hoja.cell(row=1, column=1).value, 'Radicado')
+        self.assertEqual(hoja.cell(row=2, column=1).value, self.ticket.radicado)
+        self.assertEqual(hoja.cell(row=2, column=3).value, 'Ana')
+        self.assertEqual(hoja.cell(row=2, column=9).value, Ticket.Estado.EN_PROCESO.label)
+
+    def test_el_boton_de_csv_no_deja_la_pantalla_cargando(self):
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        html = self.client.get(reverse('helpdesk:panel_reportes')).content.decode()
+
+        self.assertIn('data-spin', html)
+        self.assertNotIn('data-cargando href="/panel/reportes/csv/', html)
+
+    def test_panel_lista_los_usuarios_registrados(self):
+        self.client.login(username='soporte', password='clave-de-prueba-123')
+
+        respuesta = self.client.get(reverse('helpdesk:panel_usuarios'))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Ana Ramírez')
+        self.assertContains(respuesta, 'Cliente')

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Cables HDMI">
+  <rect width="120" height="120" rx="20" fill="#eff4ff"/>
+  <g fill="none" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M26 42h30v28H26z"/>
+    <path d="M64 50h30v28H64z"/>
+    <path d="M56 56h8M56 64h8M56 72h8"/>
+    <path d="M26 70v18a10 10 0 0010 10h28"/>
+  </g>
+</svg>

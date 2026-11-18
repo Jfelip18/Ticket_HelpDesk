@@ -4,3 +4,4 @@ env
 .idea
 *.pyc
 _pycache_
+venv

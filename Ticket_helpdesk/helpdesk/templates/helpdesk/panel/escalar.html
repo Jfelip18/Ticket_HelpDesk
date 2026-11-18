@@ -1,0 +1,32 @@
+{% extends 'helpdesk/panel/base_panel.html' %}
+
+{% block titulo %}Escalar ticket · Panel Help Desk{% endblock %}
+{% block titulo_panel %}Escalar a otra dependencia{% endblock %}
+
+{% block panel_contenido %}
+<div class="hoja hoja-panel">
+  <h1>Subir a otra dependencia</h1>
+  <p class="subtitulo">
+    Ticket {{ ticket.radicado }} · {{ ticket.usuario.nombre_completo }} · {{ ticket.producto_texto }}
+  </p>
+
+  <form method="post" class="formulario" data-cargando>
+    {% csrf_token %}
+    {% include 'helpdesk/_aviso_obligatorios.html' %}
+    <div class="grupo">
+      <label for="dependencia">Dependencia a la que se escala *</label>
+      <input type="text" id="dependencia" name="dependencia" class="campo" required
+             placeholder="Ej: Soporte técnico Bogotá">
+    </div>
+    <div class="acciones-form">
+      <button class="boton boton-primario" type="submit">Escalar ticket</button>
+      <a class="boton boton-linea" href="{% url 'helpdesk:panel_atendidos' %}">Cancelar</a>
+    </div>
+  </form>
+
+  <div class="tarjeta">
+    <h2>Descripción del caso</h2>
+    <p>{{ ticket.descripcion }}</p>
+  </div>
+</div>
+{% endblock %}
