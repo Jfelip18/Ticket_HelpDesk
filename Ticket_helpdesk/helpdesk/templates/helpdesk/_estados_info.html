@@ -1,0 +1,12 @@
+{% load helpdesk_extras %}
+<div class="tarjeta">
+  <h2>¿Qué significa cada estado?</h2>
+  <ul class="estados-lista">
+    {% for codigo, etiqueta, texto in estados_info %}
+      <li>
+        <span class="insignia {{ codigo|clase_insignia }}">{{ etiqueta }}</span>
+        <span class="estados-texto">{{ texto }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

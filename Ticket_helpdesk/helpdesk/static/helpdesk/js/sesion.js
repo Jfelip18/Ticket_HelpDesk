@@ -114,6 +114,11 @@
   }
 
   function marcarActividad() {
+    // Mientras el aviso de sesión está visible, solo el botón "Renovar
+    // sesión" puede cerrarlo: mover el mouse no renueva la sesión.
+    if (avisoVisible) {
+      return;
+    }
     ultimaActividad = Date.now();
     ocultarAviso();
     ping(false);

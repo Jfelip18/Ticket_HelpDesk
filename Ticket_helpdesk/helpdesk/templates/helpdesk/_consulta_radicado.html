@@ -1,0 +1,13 @@
+<div class="hoja hoja-consulta">
+  <h1>Consultar el estado de su caso</h1>
+  <p class="subtitulo">Ingrese el radicado que le entregamos al registrar la solicitud.</p>
+
+  <form method="get" class="formulario consulta-radicado" data-cargando>
+    {% csrf_token %}
+    <div class="grupo">
+      <label for="{{ form.radicado.id_for_label }}">{{ form.radicado.label }}</label>
+      {{ form.radicado }}
+    </div>
+    <button class="boton boton-primario" type="submit">Consultar</button>
+  </form>
+</div>

@@ -8,6 +8,29 @@
     }
   }
 
+  // Al volver atrás el navegador restaura la página desde su caché y el
+  // overlay de carga se queda pegado: hay que limpiarlo y revivir los
+  // botones que quedaron deshabilitados.
+  function ocultarCarga() {
+    document.body.classList.remove('cargando');
+    if (overlay) {
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    document.querySelectorAll('form[data-cargando] button[type="submit"]').forEach(function (boton) {
+      boton.disabled = false;
+      boton.classList.remove('boton-cargando');
+    });
+    document.querySelectorAll('form[data-cargando]').forEach(function (form) {
+      form.dataset.cargandoEnviado = '';
+    });
+  }
+
+  window.addEventListener('pageshow', function (evento) {
+    if (evento.persisted) {
+      ocultarCarga();
+    }
+  });
+
   document.querySelectorAll('form[data-cargando]').forEach(function (form) {
     form.addEventListener('submit', function (evento) {
       if (form.dataset.cargandoEnviado === '1') {

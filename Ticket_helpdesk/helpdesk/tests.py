@@ -1,4 +1,5 @@
 from io import BytesIO
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -471,7 +472,9 @@ class SeguimientoClienteTests(TestCase):
         self.assertIn('Ticket tomado por el administrador', html)
 
     def test_el_formulario_de_consulta_no_muestra_el_aviso_de_obligatorios(self):
-        respuesta = self.client.get(reverse('helpdesk:seguimiento'))
+        respuesta = self.client.get(
+            reverse('helpdesk:seguimiento'), {'vista': 'consultar'}
+        )
 
         self.assertNotContains(respuesta, 'Los campos marcados con')
         self.assertNotContains(respuesta, 'Radicado del ticket *')
@@ -497,7 +500,100 @@ class SeguimientoClienteTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, 'No encontramos ningún ticket con ese radicado.')
         self.assertNotContains(respuesta, 'Seguimiento del caso')
-        self.assertContains(respuesta, self.ticket.radicado)
+        self.assertNotContains(respuesta, 'Datos del caso')
+
+    def test_al_consultar_un_ticket_no_aparece_la_lista_de_mis_tickets(self):
+        html = self.client.get(
+            reverse('helpdesk:seguimiento'), {'radicado': self.ticket.radicado}
+        ).content.decode()
+
+        self.assertNotIn('Mis tickets (', html)
+        self.assertIn('Seguimiento del caso', html)
+        self.assertIn(self.ticket.radicado, html)
+
+    def test_al_consultar_un_ticket_se_mantienen_la_busqueda_y_los_estados(self):
+        html = self.client.get(
+            reverse('helpdesk:seguimiento'), {'radicado': self.ticket.radicado}
+        ).content.decode()
+
+        self.assertIn('Consultar el estado de su caso', html)
+        self.assertIn('¿Qué significa cada estado?', html)
+        self.assertIn('Seguimiento del caso', html)
+
+    def test_al_ver_mis_tickets_si_aparece_la_lista(self):
+        html = self.client.get(reverse('helpdesk:seguimiento')).content.decode()
+
+        self.assertIn('Mis tickets (', html)
+        self.assertIn(f'href="/seguimiento/?radicado={self.ticket.radicado}"', html)
+
+    def test_al_ver_mis_tickets_no_aparece_el_formulario_de_consulta(self):
+        html = self.client.get(reverse('helpdesk:seguimiento')).content.decode()
+
+        self.assertNotIn('Consultar el estado de su caso', html)
+
+    def test_al_consultar_mis_tickets_solo_aparece_el_formulario(self):
+        html = self.client.get(
+            reverse('helpdesk:seguimiento'), {'vista': 'consultar'}
+        ).content.decode()
+
+        self.assertIn('Consultar el estado de su caso', html)
+        self.assertNotIn('Mis tickets (', html)
+
+    def test_la_tarjeta_de_consulta_es_pequena_y_sin_error_de_campo(self):
+        html = self.client.get(
+            reverse('helpdesk:seguimiento'), {'vista': 'consultar'}
+        ).content.decode()
+
+        self.assertNotIn('Este campo es obligatorio.', html)
+        self.assertIn('hoja-consulta', html)
+        self.assertIn('consulta-radicado', html)
+
+    def test_la_tarjeta_informativa_explica_cada_estado(self):
+        html = self.client.get(
+            reverse('helpdesk:seguimiento'), {'vista': 'consultar'}
+        ).content.decode()
+
+        self.assertIn('¿Qué significa cada estado?', html)
+        for etiqueta, texto in (
+            ('En proceso', 'está en la cola'),
+            ('Atendido', 'ya está trabajando en su caso'),
+            ('Escalado a otra dependencia', 'se remitió a otra dependencia'),
+            ('Finalizado', 'se cerró y ya tiene una respuesta final'),
+        ):
+            self.assertIn(etiqueta, html)
+            self.assertIn(texto, html)
+
+
+class PortadaClienteTests(TestCase):
+    def setUp(self):
+        self.cuenta, self.perfil = crear_cliente()
+        self.client.login(username='ana', password='ClaveSegura#2026')
+        for _ in range(7):
+            crear_ticket_de_prueba(self.perfil)
+
+    def test_la_portada_muestra_solo_los_cinco_tickets_mas_recientes(self):
+        html = self.client.get(reverse('helpdesk:inicio')).content.decode()
+
+        self.assertEqual(html.count('/seguimiento/?radicado='), 5)
+        self.assertIn('Mis tickets (7)', html)
+        self.assertIn('Ver todos mis tickets', html)
+
+
+class CargaJsTests(TestCase):
+    def test_el_js_de_carga_limpia_la_pantalla_al_volver_atras(self):
+        ruta = (
+            Path(settings.BASE_DIR)
+            / 'helpdesk'
+            / 'static'
+            / 'helpdesk'
+            / 'js'
+            / 'cargando.js'
+        )
+
+        contenido = ruta.read_text(encoding='utf-8')
+
+        self.assertIn('pageshow', contenido)
+        self.assertIn('ocultarCarga', contenido)
 
 
 class ModeloYTransicionesTests(TestCase):

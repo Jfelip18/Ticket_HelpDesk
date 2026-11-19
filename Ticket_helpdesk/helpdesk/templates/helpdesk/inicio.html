@@ -11,7 +11,7 @@
       Seleccione el producto que necesita soporte y cuéntenos qué le está pasando.
     </p>
     <div class="portada-acciones">
-      <a class="boton boton-linea boton-grande" href="{% url 'helpdesk:seguimiento' %}">
+      <a class="boton boton-linea boton-grande" href="{% url 'helpdesk:seguimiento' %}?vista=consultar">
         Consultar mis tickets
       </a>
       <a class="boton boton-claro boton-grande" href="{% url 'helpdesk:solicitar' %}">
@@ -37,8 +37,14 @@
 </div>
 
 <div class="tarjeta">
-  <h2>Mis tickets ({{ total_tickets }})</h2>
+  <div class="cabecera-tarjeta">
+    <h2>Mis tickets ({{ total_tickets }})</h2>
+    <a class="boton boton-linea" href="{% url 'helpdesk:seguimiento' %}?vista=lista" data-cargando>
+      Ver todos mis tickets
+    </a>
+  </div>
   {% if tickets %}
+  <p class="nota">Mostrando los 5 más recientes.</p>
   <div class="tabla-envoltura">
     <table class="tabla">
       <thead>

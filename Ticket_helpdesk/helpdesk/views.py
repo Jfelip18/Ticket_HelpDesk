@@ -47,7 +47,8 @@ IMAGENES_PRODUCTO = {
     Ticket.Producto.OTRO: 'otro.svg',
 }
 
-SECCIONES = {    'proceso': {
+SECCIONES = {
+    'proceso': {
         'titulo': 'En proceso',
         'estado': Ticket.Estado.EN_PROCESO,
         'url': 'helpdesk:panel_en_proceso',
@@ -67,6 +68,22 @@ SECCIONES = {    'proceso': {
         'estado': Ticket.Estado.FINALIZADO,
         'url': 'helpdesk:panel_finalizados',
     },
+}
+
+# Explicación de cada estado para el cliente (tarjeta informativa).
+DESCRIPCIONES_ESTADO = {
+    Ticket.Estado.EN_PROCESO: (
+        'Su solicitud quedó registrada y está en la cola: el Help Desk todavía no la toma.'
+    ),
+    Ticket.Estado.ATENDIDO: (
+        'Un administrador del Help Desk ya está trabajando en su caso.'
+    ),
+    Ticket.Estado.ESCALADO: (
+        'El caso se remitió a otra dependencia (TI, mantenimiento, recursos humanos, etc.) '
+    ),
+    Ticket.Estado.FINALIZADO: (
+        'El caso se cerró y ya tiene una respuesta final.'
+    ),
 }
 
 
@@ -254,7 +271,7 @@ def inicio(request):
     context = {
         'perfil': perfil,
         'form': form,
-        'tickets': tickets,
+        'tickets': tickets[:5],
         'total_tickets': tickets.count(),
         'opciones': [
             (valor, etiqueta, IMAGENES_PRODUCTO[valor])
@@ -307,10 +324,24 @@ def seguimiento(request):
             ticket = tickets.filter(radicado=form.cleaned_data['radicado']).first()
             if ticket is None:
                 messages.error(request, 'No encontramos ningún ticket con ese radicado.')
+    # 'consultar' muestra solo el formulario de radicado, 'lista' solo los
+    # tickets del cliente y con radicado se muestra solo el caso consultado.
+    vista = request.GET.get('vista', '')
+    if request.GET.get('radicado'):
+        vista = 'consultar'
     return render(
         request,
         'helpdesk/seguimiento.html',
-        {'form': form, 'ticket': ticket, 'tickets': tickets},
+        {
+            'form': form,
+            'ticket': ticket,
+            'tickets': tickets,
+            'vista': vista,
+            'estados_info': [
+                (codigo, etiqueta, DESCRIPCIONES_ESTADO.get(codigo, ''))
+                for codigo, etiqueta in Ticket.Estado.choices
+            ],
+        },
     )
 
 

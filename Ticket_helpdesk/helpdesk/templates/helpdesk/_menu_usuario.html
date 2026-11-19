@@ -15,7 +15,7 @@
 
     <div class="menu-usuario-lista">
       {% if user.perfil_helpdesk.tipo != 'ADMIN' %}
-        <a href="{% url 'helpdesk:seguimiento' %}">
+        <a href="{% url 'helpdesk:seguimiento' %}?vista=lista">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4V7z"></path>

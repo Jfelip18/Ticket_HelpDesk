@@ -3,60 +3,61 @@
 {% block titulo %}Seguimiento del ticket · Help Desk{% endblock %}
 
 {% block contenido %}
-<div class="hoja">
-  <h1>Consultar el estado de su caso</h1>
-  <p class="subtitulo">Ingrese el radicado que le entregamos al registrar la solicitud.</p>
-
-  <form method="get" class="formulario formulario-busqueda" data-cargando>
-    {% csrf_token %}
-    <div class="grupo">
-      <label for="{{ form.radicado.id_for_label }}">{{ form.radicado.label }}</label>
-      {{ form.radicado }}
-      {% for error in form.radicado.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-    </div>
-    <button class="boton boton-primario" type="submit">Consultar</button>
-  </form>
-</div>
-
 {% if ticket %}
-<div class="hoja">
-  <div class="cabecera-ticket">
-    <div>
-      <h2 class="radicado-inline">{{ ticket.radicado }}</h2>
-      <p class="subtitulo">{{ ticket.producto_texto }}</p>
-    </div>
-    <span class="insignia {{ ticket.estado_clase }}">{{ ticket.get_estado_display }}</span>
-  </div>
+{# Ticket consultado: la consulta y la tarjeta de estados se mantienen en su sitio. #}
+<div class="consulta-layout consulta-layout-ticket">
+  {% include 'helpdesk/_consulta_radicado.html' %}
+  {% include 'helpdesk/_estados_info.html' %}
 
-  <div class="rejilla-dos">
-    <div class="tarjeta">
-      <h3>Seguimiento del caso</h3>
-      {% include 'helpdesk/_linea_tiempo.html' %}
+  <div class="hoja consulta-info-ticket">
+    <div class="cabecera-ticket">
+      <div>
+        <h2 class="radicado-inline">{{ ticket.radicado }}</h2>
+        <p class="subtitulo">{{ ticket.producto_texto }}</p>
+      </div>
+      <span class="insignia {{ ticket.estado_clase }}">{{ ticket.get_estado_display }}</span>
     </div>
-    <div class="tarjeta">
-      <h3>Datos del caso</h3>
-      <dl class="datos">
-        <dt>Cliente</dt>
-        <dd>{{ ticket.usuario.nombre_completo }}</dd>
-        <dt>Dirección del cliente</dt>
-        <dd>{{ ticket.usuario.direccion }}</dd>
-        <dt>Teléfono</dt>
-        <dd>{{ ticket.usuario.telefono_formateado }}</dd>
-        <dt>Producto</dt>
-        <dd>{{ ticket.producto_texto }}</dd>
-        <dt>Descripción</dt>
-        <dd>{{ ticket.descripcion }}</dd>
-        {% if ticket.dependencia %}
-          <dt>Dependencia</dt>
-          <dd>{{ ticket.dependencia_texto }}</dd>
-        {% endif %}
-        <dt>Registrado</dt>
-        <dd>{{ ticket.creado_en|date:'d/m/Y H:i' }}</dd>
-      </dl>
+
+    <div class="rejilla-dos">
+      <div class="tarjeta">
+        <h3>Seguimiento del caso</h3>
+        {% include 'helpdesk/_linea_tiempo.html' %}
+      </div>
+      <div class="tarjeta">
+        <h3>Datos del caso</h3>
+        <dl class="datos">
+          <dt>Cliente</dt>
+          <dd>{{ ticket.usuario.nombre_completo }}</dd>
+          <dt>Dirección del cliente</dt>
+          <dd>{{ ticket.usuario.direccion }}</dd>
+          <dt>Teléfono</dt>
+          <dd>{{ ticket.usuario.telefono_formateado }}</dd>
+          <dt>Producto</dt>
+          <dd>{{ ticket.producto_texto }}</dd>
+          <dt>Descripción</dt>
+          <dd>{{ ticket.descripcion }}</dd>
+          {% if ticket.dependencia %}
+            <dt>Dependencia</dt>
+            <dd>{{ ticket.dependencia_texto }}</dd>
+          {% endif %}
+          <dt>Registrado</dt>
+          <dd>{{ ticket.creado_en|date:'d/m/Y H:i' }}</dd>
+        </dl>
+      </div>
+    </div>
+
     </div>
   </div>
 </div>
-{% endif %}
+{% elif vista == 'consultar' %}
+{# Tarjeta de consulta y tarjeta informativa de los estados, una al lado de la otra. #}
+<div class="consulta-layout">
+  {% include 'helpdesk/_consulta_radicado.html' %}
+  {% include 'helpdesk/_estados_info.html' %}
+</div>
+{% else %}
+{# Solo la tarjeta con los tickets del cliente. #}
+{% include 'helpdesk/_estados_info.html' %}
 
 <div class="tarjeta">
   <h2>Mis tickets ({{ tickets|length }})</h2>
@@ -91,4 +92,5 @@
     <p class="vacio">Todavía no tiene tickets registrados.</p>
   {% endif %}
 </div>
+{% endif %}
 {% endblock %}
