@@ -3,13 +3,13 @@
 {% block titulo %}Crear cuenta · Help Desk{% endblock %}
 
 {% block contenido %}
-<div class="hoja">
+<div class="hoja hoja-registro">
   <div class="centro-texto">
     <h1>Registro de usuario</h1>
     <p class="subtitulo">Paso 1 de 2: ingrese sus datos personales.</p>
   </div>
 
-  <form method="post" class="formulario" novalidate data-cargando>
+  <form method="post" class="formulario formulario-registro" novalidate data-cargando>
     {% csrf_token %}
     {% include 'helpdesk/_aviso_obligatorios.html' %}
     {% if form.non_field_errors %}

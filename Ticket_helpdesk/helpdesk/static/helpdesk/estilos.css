@@ -551,7 +551,31 @@ h3 {
 
 .rejilla-form-registro {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.formulario-registro {
   max-width: 1000px;
+  margin-inline: auto;
+}
+
+/* Las cajas de fondo se ajustan al tamaño de lo que tienen dentro. */
+.hoja-registro {
+  max-width: 1080px;
+  margin-inline: auto;
+}
+
+.hoja-registro-paso2 {
+  padding: 2.6rem 2.4rem 2.4rem;
+}
+
+.formulario-registro fieldset {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.formulario-registro .rejilla-form-registro {
+  min-width: 860px;
 }
 
 .rejilla-form-media {
@@ -568,13 +592,17 @@ h3 {
 
 .acceso-paso {
   display: grid;
-  grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 520px) minmax(0, 444px);
   gap: 0;
   align-items: stretch;
+  justify-content: center;
 }
 
 .fieldset-acceso {
   padding: 0;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
 }
 
 .fieldset-acceso legend {
