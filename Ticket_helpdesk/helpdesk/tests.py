@@ -235,7 +235,7 @@ class AccesoClienteTests(TestCase):
         contenido = respuesta.content.decode()
         self.assertContains(respuesta, 'data-cargando')
         self.assertIn('cargando-overlay', contenido)
-        self.assertIn('circulo-carga', contenido)
+        self.assertIn('carga-logo', contenido)
 
     def test_el_registro_muestra_el_aviso_de_carga(self):
         respuesta = self.client.get(reverse('helpdesk:registro'))
