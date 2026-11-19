@@ -84,7 +84,7 @@ class RegistroClienteTests(TestCase):
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, 'Registro de usuario')
-        self.assertContains(respuesta, 'Correo electrónico *')
+        self.assertContains(respuesta, 'Correo electrónico <span class="obligatorio">*</span>')
         self.assertNotContains(respuesta, 'Repetir contraseña')
 
     def test_la_cuenta_se_pide_en_un_paso_posterior(self):
@@ -97,7 +97,7 @@ class RegistroClienteTests(TestCase):
         respuesta = self.client.get(reverse('helpdesk:registro_cuenta'))
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, 'Cuenta de acceso')
-        self.assertContains(respuesta, 'Repetir contraseña *')
+        self.assertContains(respuesta, 'Repetir contraseña <span class="obligatorio">*</span>')
         self.assertContains(respuesta, 'Acepto los términos y condiciones')
         self.assertContains(respuesta, 'Autorizo el tratamiento de mis datos personales')
         self.assertContains(respuesta, 'Retrato de estudiante')
@@ -437,7 +437,7 @@ class SolicitudClienteTests(TestCase):
         )
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertContains(respuesta, 'Correo electrónico *')
+        self.assertContains(respuesta, 'Correo electrónico <span class="obligatorio">*</span>')
         self.assertContains(respuesta, 'Este campo es obligatorio.')
 
 

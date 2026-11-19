@@ -88,12 +88,12 @@
       {% include 'helpdesk/_aviso_obligatorios.html' %}
       <input type="hidden" name="producto" id="modal-producto" value="">
       <div class="grupo" id="modal-campo-otro" hidden>
-        <label for="modal-producto-otro">Nombre del producto *</label>
+        <label for="modal-producto-otro">Nombre del producto <span class="obligatorio">*</span></label>
         <input type="text" name="producto_otro" id="modal-producto-otro" class="campo"
           placeholder="Escriba el producto que necesita soporte">
       </div>
       <div class="grupo">
-        <label for="modal-descripcion">Describa el problema *</label>
+        <label for="modal-descripcion">Describa el problema <span class="obligatorio">*</span></label>
         <textarea name="descripcion" id="modal-descripcion" class="campo" rows="5" required
           maxlength="{{ longitud_descripcion }}" placeholder="Cuéntenos qué está pasando con el producto"></textarea>
       </div>
