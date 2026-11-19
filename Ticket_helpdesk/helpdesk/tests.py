@@ -912,8 +912,8 @@ class PanelAdministradorTests(TestCase):
         respuesta = self.client.get(reverse('helpdesk:panel_otra_dependencia'))
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertContains(respuesta, 'Finalizar')
-        self.assertNotContains(respuesta, 'Tomar ticket')
+        self.assertContains(respuesta, 'accion-icono-finalizar')
+        self.assertNotContains(respuesta, 'accion-icono-primario')
         self.assertNotContains(respuesta, 'Subir a otra dependencia')
 
     def test_descarga_de_reporte_csv(self):

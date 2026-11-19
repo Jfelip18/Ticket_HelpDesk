@@ -1136,6 +1136,85 @@ textarea.campo {
   flex-wrap: wrap;
 }
 
+/* Botones de acción del panel: cuadro con solo el icono. */
+.accion-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--secundario-borde);
+  border-radius: 10px;
+  background: var(--superficie);
+  color: var(--secundario-texto);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.accion-icono svg {
+  width: 19px;
+  height: 19px;
+}
+
+.accion-icono:hover {
+  background: var(--secundario-suave);
+  text-decoration: none;
+}
+
+.accion-icono-primario {
+  background: var(--superficie);
+  border-color: var(--primario-borde);
+  color: var(--primario-texto);
+}
+
+.accion-icono-primario:hover {
+  background: var(--primario-suave);
+  border-color: var(--primario);
+  color: var(--primario-texto);
+}
+
+.accion-icono-finalizar {
+  border-color: var(--exito-borde);
+  color: var(--exito);
+}
+
+.accion-icono-finalizar:hover {
+  background: var(--exito-suave);
+}
+
+.acciones-celda .accion-icono {
+  margin-left: .35rem;
+  vertical-align: middle;
+}
+
+/* Los botones de acción quedan en una sola línea, alineados y simétricos. */
+.acciones-linea {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .4rem;
+  flex-wrap: nowrap;
+  vertical-align: middle;
+}
+
+.acciones-linea .accion-icono,
+.acciones-linea form.inline {
+  margin: 0;
+  vertical-align: middle;
+}
+
+.acciones-celda form.inline,
+.acciones .inline {
+  display: inline-flex;
+  vertical-align: middle;
+  margin: 0 .2rem;
+}
+
+.acciones .accion-icono {
+  margin: 0;
+}
+
 .filtros {
   display: flex;
   flex-wrap: wrap;
