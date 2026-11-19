@@ -15,14 +15,45 @@
 
     <div class="menu-usuario-lista">
       {% if user.perfil_helpdesk.tipo != 'ADMIN' %}
-        <a href="{% url 'helpdesk:seguimiento' %}">Ver mis tickets</a>
-        <a href="{% url 'helpdesk:inicio' %}?datos=1">Actualizar datos</a>
+        <a href="{% url 'helpdesk:seguimiento' %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4V7z"></path>
+            <path d="M9 7v10"></path>
+          </svg>
+          Ver mis tickets
+        </a>
+        <a href="{% url 'helpdesk:inicio' %}?datos=1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+          </svg>
+          Actualizar datos
+        </a>
       {% elif not es_panel %}
-        <a href="{% url 'helpdesk:panel_dashboard' %}">Panel de gestión</a>
+        <a href="{% url 'helpdesk:panel_dashboard' %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+          </svg>
+          Panel de gestión
+        </a>
       {% endif %}
       <form method="post" action="{% url 'helpdesk:salir' %}">
         {% csrf_token %}
-        <button class="menu-usuario-salir" type="submit">Cerrar sesión</button>
+        <button class="menu-usuario-salir" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"></path>
+            <path d="M10 17l-5-5 5-5"></path>
+            <path d="M5 12h10"></path>
+          </svg>
+          Cerrar sesión
+        </button>
       </form>
     </div>
   </details>

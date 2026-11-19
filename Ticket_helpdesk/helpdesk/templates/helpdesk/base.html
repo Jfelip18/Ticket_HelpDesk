@@ -9,13 +9,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'helpdesk/estilos.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'helpdesk/estilos.css' %}?v=14">
   <script src="{% static 'helpdesk/js/mascara-telefono.js' %}?v=5" defer></script>
   <script src="{% static 'helpdesk/js/cargando.js' %}?v=5" defer></script>
   <script src="{% static 'helpdesk/js/menu-usuario.js' %}?v=5" defer></script>
   <script src="{% static 'helpdesk/js/sesion.js' %}?v=5" defer></script>
 </head>
 <body
+  class="{% block body_class %}{% endblock %}"
   data-sesion-ping="{% url 'helpdesk:ping' %}"
   data-sesion-salir="{% url 'helpdesk:salir' %}"
   data-sesion-ingresar="{% url 'helpdesk:ingresar' %}"
@@ -24,7 +25,10 @@
   data-sesion-activa="{% if user.is_authenticated %}1{% else %}0{% endif %}">
   <header class="cabecera">
     <div class="contenedor cabecera-interior">
-      <a class="marca" href="{% url 'helpdesk:inicio' %}">Help<span>Desk</span></a>
+      <a class="marca" href="{% url 'helpdesk:inicio' %}">
+        <img class="marca-logo" src="{% static 'helpdesk/img/LOGO UNINUNEZ.png' %}" alt="">
+        Help<span>Desk</span>
+      </a>
       <nav class="nav-principal"></nav>
       {% block cabecera_extra %}{% endblock %}
       {% if user.is_authenticated %}
@@ -88,5 +92,6 @@
     </div>
   </div>
 </footer>
+{% block scripts_extra %}{% endblock %}
 </body>
 </html>

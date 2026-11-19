@@ -164,6 +164,25 @@ def _filtrar_tickets(queryset, params):
     return queryset
 
 
+def _gradiente_circular(filas):
+    """Calcula porcentajes y el gradiente de un diagrama circular."""
+    total = sum(fila['total'] for fila in filas)
+    acumulado = 0.0
+    segmentos = []
+    for fila in filas:
+        fila['porcentaje'] = round(fila['total'] * 100 / total) if total else 0
+        if fila['total'] and total:
+            fin = acumulado + fila['total'] * 100 / total
+            segmentos.append(f"{fila['color']} {acumulado:.2f}% {fin:.2f}%")
+            acumulado = fin
+    gradiente = (
+        f"conic-gradient({', '.join(segmentos)})"
+        if segmentos
+        else 'conic-gradient(#E3E3E1 0% 100%)'
+    )
+    return total, gradiente
+
+
 def registro(request):
     """Paso 1: el cliente ingresa sus datos personales."""
     if request.user.is_authenticated:
@@ -414,19 +433,51 @@ def panel_ticket_escalar(request, pk):
 @admin_required
 def panel_reportes(request):
     tickets = _filtrar_tickets(Ticket.objects.select_related('usuario'), request.GET)
+
+    colores_estado = {
+        Ticket.Estado.EN_PROCESO: '#F07E12',
+        Ticket.Estado.ATENDIDO: '#249ABC',
+        Ticket.Estado.ESCALADO: '#0B6B5A',
+        Ticket.Estado.FINALIZADO: '#8CC00D',
+    }
+    por_estado = [
+        {
+            'etiqueta': etiqueta,
+            'total': tickets.filter(estado=valor).count(),
+            'color': colores_estado[valor],
+        }
+        for valor, etiqueta in Ticket.Estado.choices
+    ]
+    total_estado, gradiente_estado = _gradiente_circular(por_estado)
+
+    colores_producto = {
+        Ticket.Producto.VIDEOBEAM: '#249ABC',
+        Ticket.Producto.TV: '#F07E12',
+        Ticket.Producto.CABLE_HDMI: '#0B6B5A',
+        Ticket.Producto.AIRE_ACONDICIONADO: '#8CC00D',
+        Ticket.Producto.OTRO: '#6B7C93',
+    }
+    por_producto = [
+        {
+            'etiqueta': etiqueta,
+            'total': tickets.filter(producto=valor).count(),
+            'color': colores_producto[valor],
+        }
+        for valor, etiqueta in Ticket.Producto.choices
+    ]
+    total_producto, gradiente_producto = _gradiente_circular(por_producto)
+
     context = _contexto_panel(request)
     context.update(
         {
             'tickets': tickets[:200],
             'total_resultados': tickets.count(),
-            'por_estado': [
-                {'estado': etiqueta, 'total': Ticket.objects.filter(estado=valor).count()}
-                for valor, etiqueta in Ticket.Estado.choices
-            ],
-            'por_producto': [
-                {'producto': etiqueta, 'total': Ticket.objects.filter(producto=valor).count()}
-                for valor, etiqueta in Ticket.Producto.choices
-            ],
+            'por_estado': por_estado,
+            'total_estado': total_estado,
+            'gradiente_estado': gradiente_estado,
+            'por_producto': por_producto,
+            'total_producto': total_producto,
+            'gradiente_producto': gradiente_producto,
             'filtros': request.GET,
         }
     )

@@ -60,36 +60,8 @@
 </form>
 
 <div class="rejilla-dos">
-  <div class="tarjeta">
-    <h2>Tickets por estado</h2>
-    <table class="tabla tabla-simple">
-      <tbody>
-        {% for fila in por_estado %}
-          <tr>
-            <td>{{ fila.estado }}</td>
-            <td class="derecha"><strong>{{ fila.total }}</strong></td>
-          </tr>
-        {% empty %}
-          <tr><td>Sin datos</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  <div class="tarjeta">
-    <h2>Tickets por producto</h2>
-    <table class="tabla tabla-simple">
-      <tbody>
-        {% for fila in por_producto %}
-          <tr>
-            <td>{{ fila.producto }}</td>
-            <td class="derecha"><strong>{{ fila.total }}</strong></td>
-          </tr>
-        {% empty %}
-          <tr><td>Sin datos</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  {% include 'helpdesk/panel/_grafica_dona.html' with titulo='Tickets por estado' total=total_estado gradiente=gradiente_estado filas=por_estado %}
+  {% include 'helpdesk/panel/_grafica_dona.html' with titulo='Tickets por producto' total=total_producto gradiente=gradiente_producto filas=por_producto %}
 </div>
 
 <div class="tarjeta">

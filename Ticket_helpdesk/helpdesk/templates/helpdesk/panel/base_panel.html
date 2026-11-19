@@ -26,3 +26,17 @@
   </section>
 </div>
 {% endblock %}
+
+{% block scripts_extra %}
+<script>
+  (function () {
+    if (!window.matchMedia('(max-width: 860px)').matches) { return; }
+    var menu = document.querySelector('.panel-menu');
+    var activo = document.querySelector('.panel-menu .menu-item.activo');
+    if (!menu || !activo) { return; }
+    var cajaMenu = menu.getBoundingClientRect();
+    var cajaActivo = activo.getBoundingClientRect();
+    menu.scrollLeft += (cajaActivo.left - cajaMenu.left) - (cajaMenu.width - cajaActivo.width) / 2;
+  })();
+</script>
+{% endblock %}

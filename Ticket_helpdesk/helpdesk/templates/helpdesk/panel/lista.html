@@ -58,7 +58,7 @@
           <th>Teléfono</th>
           <th>Dependencia</th>
           <th>Registrado</th>
-          <th class="acciones-celda">Acciones</th>
+          {% if seccion != 'finalizados' %}<th class="acciones-celda">Acciones</th>{% endif %}
         </tr>
       </thead>
       <tbody>
@@ -70,9 +70,11 @@
             <td>{{ ticket.usuario.telefono_formateado }}</td>
             <td>{{ ticket.dependencia_texto|default:'—' }}</td>
             <td>{{ ticket.creado_en|date:'d/m/Y H:i' }}</td>
-            <td class="acciones-celda">
-              {% include 'helpdesk/panel/_acciones.html' with destino=request.get_full_path %}
-            </td>
+            {% if seccion != 'finalizados' %}
+              <td class="acciones-celda">
+                {% include 'helpdesk/panel/_acciones.html' with destino=request.get_full_path %}
+              </td>
+            {% endif %}
           </tr>
         {% endfor %}
       </tbody>

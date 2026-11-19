@@ -1,49 +1,116 @@
 {% extends 'helpdesk/base.html' %}
+{% load static %}
 
 {% block titulo %}Ingresar · Help Desk{% endblock %}
+{% block body_class %}pagina-ingreso{% endblock %}
 
 {% block contenido %}
-<div class="hoja hoja-ingreso">
-  <div class="icono-acceso" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#9A4F00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-      <circle cx="12" cy="7" r="4"/>
-    </svg>
-  </div>
+<div class="ingreso">
+  <section class="ingreso-arte" aria-hidden="true">
+    <span class="ingreso-forma ingreso-forma-uno"></span>
+    <span class="ingreso-forma ingreso-forma-dos"></span>
+    <span class="ingreso-forma ingreso-forma-tres"></span>
 
-  <h1 class="titulo-acceso">Ingresar</h1>
-  <p class="subtitulo centrado-texto">Use el usuario y la contraseña con los que se registró.</p>
-
-  {% if request.GET.sesion == 'cerrada' %}
-    <div class="mensaje">
-      Su sesión se cerró por inactividad. Ingrese de nuevo.
+    <div class="ingreso-arte-marca">
+      <img src="{% static 'helpdesk/img/LOGO UNINUNEZ.png' %}" alt="">
+      <span class="ingreso-arte-marca-texto">Help<span>Desk</span></span>
     </div>
-  {% endif %}
 
-  <form method="post" class="formulario" novalidate data-cargando>
-    {% csrf_token %}
-    {% include 'helpdesk/_aviso_obligatorios.html' %}
-    {% if form.non_field_errors %}
-      <div class="mensaje error">
-        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    <div class="ingreso-arte-texto">
+      <p class="ingreso-eyebrow">Sistema de tickets</p>
+      <h2 class="ingreso-arte-titulo">Soporte que se siente cerca.</h2>
+      <p class="ingreso-arte-bajada">
+        Radique sus solicitudes, siga el estado de sus tickets y hable con el
+        equipo de soporte de UNINÚÑEZ en un solo lugar.
+      </p>
+    </div>
+
+    <figure class="ingreso-arte-banner">
+      <img
+        src="{% static 'helpdesk/img/banner_u.png' %}"
+        alt="UNINÚÑEZ — Corporación Universitaria Rafael Núñez"
+      >
+    </figure>
+  </section>
+
+  <section class="ingreso-panel">
+    <div class="ingreso-caja">
+      <div class="ingreso-marca-movil">
+        <img src="{% static 'helpdesk/img/LOGO UNINUNEZ.png' %}" alt="UNINÚÑEZ">
+        <span class="ingreso-arte-marca-texto">Help<span>Desk</span></span>
       </div>
-    {% endif %}
-    <div class="grupo">
-      <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
-      {{ form.username }}
-      {% for error in form.username.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-    </div>
-    <div class="grupo">
-      <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
-      {{ form.password }}
-      {% for error in form.password.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-    </div>
-    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-    <button class="boton boton-primario boton-ancho boton-acceso" type="submit">Ingresar</button>
-  </form>
 
-  <p class="nota centrado-texto">
-    ¿Todavía no tiene cuenta? <a href="{% url 'helpdesk:registro' %}">Regístrese aquí</a>
-  </p>
+      <p class="ingreso-eyebrow">Bienvenido de nuevo</p>
+      <h1 class="ingreso-titulo">Inicie sesión</h1>
+      <p class="ingreso-subtitulo">Use el usuario y la contraseña con los que se registró.</p>
+
+      {% if request.GET.sesion == 'cerrada' %}
+        <div class="mensaje">
+          Su sesión se cerró por inactividad. Ingrese de nuevo.
+        </div>
+      {% endif %}
+
+      <form method="post" class="ingreso-formulario" novalidate data-cargando>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="mensaje error">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="ingreso-grupo">
+          <label for="{{ form.username.id_for_label }}">Usuario</label>
+          <div class="ingreso-campo">
+            <span class="ingreso-campo-icono" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            {{ form.username }}
+          </div>
+          {% for error in form.username.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="ingreso-grupo">
+          <label for="{{ form.password.id_for_label }}">Contraseña</label>
+          <div class="ingreso-campo ingreso-campo-clave">
+            <span class="ingreso-campo-icono" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="10" width="16" height="11" rx="2.5"/>
+                <path d="M8 10V7a4 4 0 018 0v3"/>
+              </svg>
+            </span>
+            {{ form.password }}
+            <button class="ingreso-ver" type="button" data-ver-clave aria-label="Mostrar contraseña" aria-pressed="false">
+              <svg data-icono-ver viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/>
+                <circle cx="12" cy="12" r="2.8"/>
+              </svg>
+              <svg data-icono-ocultar viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" hidden>
+                <path d="M3 3l18 18"/>
+                <path d="M10.6 6.2A10.9 10.9 0 0112 6c6.4 0 10 6 10 6a18 18 0 01-3.4 4.1"/>
+                <path d="M6.2 7.7A18 18 0 002 12s3.6 6 10 6a10.9 10.9 0 004.1-.8"/>
+              </svg>
+            </button>
+          </div>
+          {% for error in form.password.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+        </div>
+
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button class="boton boton-primario boton-ancho ingreso-boton" type="submit">Ingresar</button>
+      </form>
+
+      <p class="ingreso-nota">
+        ¿Todavía no tiene cuenta? <a href="{% url 'helpdesk:registro' %}">Regístrese aquí</a>
+      </p>
+
+      <p class="ingreso-pie">© {% now "Y" %} UNINÚÑEZ · Acceso seguro</p>
+    </div>
+  </section>
 </div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script src="{% static 'helpdesk/js/login.js' %}?v=1" defer></script>
 {% endblock %}

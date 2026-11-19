@@ -1,0 +1,25 @@
+<div class="tarjeta">
+  <h2>{{ titulo }}</h2>
+  {% if total %}
+    <div class="grafica-dona-envoltura">
+      <div class="grafica-dona" style="background: {{ gradiente }}" aria-hidden="true">
+        <div class="grafica-dona-centro">
+          <strong>{{ total }}</strong>
+          <span>tickets</span>
+        </div>
+      </div>
+      <ul class="grafica-leyenda">
+        {% for fila in filas %}
+          <li>
+            <span class="grafica-punto" style="background: {{ fila.color }}"></span>
+            <span class="grafica-leyenda-nombre">{{ fila.etiqueta }}</span>
+            <strong>{{ fila.total }}</strong>
+            <span class="grafica-pct">{{ fila.porcentaje }}%</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% else %}
+    <p class="vacio">Sin datos</p>
+  {% endif %}
+</div>
