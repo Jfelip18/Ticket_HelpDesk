@@ -636,16 +636,13 @@ h3 {
 }
 
 .aviso-obligatorio {
-  background: var(--alerta-suave);
-  color: var(--alerta);
-  border: 1px solid var(--alerta-borde);
-  border-radius: 9px;
-  padding: .6rem .9rem;
+  color: var(--texto-suave);
   font-size: .88rem;
   margin: 0 0 1.15rem;
 }
 
-.aviso-obligatorio strong {
+.obligatorio {
+  color: var(--error);
   font-weight: 700;
 }
 

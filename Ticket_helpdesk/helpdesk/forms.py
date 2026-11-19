@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.utils.html import format_html
 
 from .config import LONGITUDES_PERFIL, LONGITUDES_REGISTRO, LONGITUD_DESCRIPCION
 from .models import Ticket, Usuario
@@ -34,10 +35,10 @@ def normalizar_telefono(valor):
 
 
 def marcar_obligatorios(form):
-    """Agrega un asterisco a la etiqueta de todos los campos obligatorios."""
+    """Agrega un asterisco rojo a la etiqueta de los campos obligatorios."""
     for campo in form.fields.values():
         if campo.required and campo.label:
-            campo.label = f'{campo.label} *'
+            campo.label = format_html('{} <span class="obligatorio">*</span>', campo.label)
     return form
 
 
